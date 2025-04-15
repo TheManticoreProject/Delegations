@@ -1,0 +1,46 @@
+name: Build on commit
+
+on:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    name: Build Release Assets
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        os: [linux, windows, darwin]
+        arch: [amd64, arm64, 386]
+        binaryname: [Delegations]
+        # Exclude incompatible couple of GOOS and GOARCH values
+        exclude:
+          - os: darwin
+            arch: 386
+
+    env:
+      GO111MODULE: 'on'
+      CGO_ENABLED: '0'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22.1'
+
+      - name: Build Binary
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          mkdir -p build
+          ls -lha
+          OUTPUT_PATH="../build/${{ matrix.binaryname }}-${{ matrix.os }}-${{ matrix.arch }}"
+          # Build the binary
+          cd ./src/;
+          go build -ldflags="-s -w" -o $OUTPUT_PATH${{ matrix.os == 'windows' && '.exe' || '' }}

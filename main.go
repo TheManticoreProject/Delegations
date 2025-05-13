@@ -6,7 +6,7 @@ import (
 	"github.com/TheManticoreProject/Delegations/core/mode_find"
 	"github.com/TheManticoreProject/Manticore/logger"
 	"github.com/TheManticoreProject/Manticore/windows/credentials"
-	"github.com/TheManticoreProject/goopts/subparser"
+	"github.com/TheManticoreProject/goopts/parser"
 )
 
 var (
@@ -29,17 +29,13 @@ var (
 )
 
 func parseArgs() {
-	asp := subparser.ArgumentsSubparser{
-		Banner:           "Delegations - by Remi GASCOU (Podalirius) @ TheManticoreProject - v1.0.0",
-		ShowBannerOnHelp: true,
-		ShowBannerOnRun:  true,
-		Name:             "mode",
-		Value:            &mode,
-		CaseInsensitive:  true,
+	ap := parser.ArgumentsParser{
+		Banner: "Delegations - by Remi GASCOU (Podalirius) @ TheManticoreProject - v1.0.0",
 	}
+	ap.SetupSubParsing("mode", &mode, true)
 
 	// find mode ============================================================================================================
-	subparser_find := asp.AddSubParser("find", "Find constrained, unconstrained, and resource-based constrained delegations in Active Directory.")
+	subparser_find := ap.AddSubParser("find", "Find constrained, unconstrained, and resource-based constrained delegations in Active Directory.")
 	// Configuration flags
 	subparser_find_group_config, err := subparser_find.NewArgumentGroup("Configuration")
 	if err != nil {
@@ -69,7 +65,7 @@ func parseArgs() {
 	}
 
 	// add mode ============================================================================================================
-	subparser_add := asp.AddSubParser("add", "Add a constrained, unconstrained, or resource-based constrained delegation to a user or group.")
+	subparser_add := ap.AddSubParser("add", "Add a constrained, unconstrained, or resource-based constrained delegation to a user or group.")
 	subparser_add.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_add_group_config, err := subparser_add.NewArgumentGroup("Configuration")
@@ -100,7 +96,7 @@ func parseArgs() {
 	}
 
 	// remove mode ============================================================================================================
-	subparser_remove := asp.AddSubParser("remove", "Remove a constrained, unconstrained, or resource-based constrained delegation from a user or group.")
+	subparser_remove := ap.AddSubParser("remove", "Remove a constrained, unconstrained, or resource-based constrained delegation from a user or group.")
 	subparser_remove.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_remove_group_config, err := subparser_remove.NewArgumentGroup("Configuration")
@@ -130,7 +126,7 @@ func parseArgs() {
 		subparser_remove_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
 	}
 
-	asp.Parse()
+	ap.Parse()
 }
 
 func main() {

@@ -42,5 +42,4 @@ jobs:
           ls -lha
           OUTPUT_PATH="../build/${{ matrix.binaryname }}-${{ matrix.os }}-${{ matrix.arch }}"
           # Build the binary
-          cd ./src/;
           go build -ldflags="-s -w" -o $OUTPUT_PATH${{ matrix.os == 'windows' && '.exe' || '' }}

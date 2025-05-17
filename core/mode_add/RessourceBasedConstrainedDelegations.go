@@ -4,5 +4,8 @@ import (
 	"github.com/TheManticoreProject/Manticore/windows/credentials"
 )
 
-func AddRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool) {
+func AddRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, allowedToDelegateTo []string) error {
+
+	return nil
+
 }

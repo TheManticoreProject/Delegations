@@ -13,17 +13,66 @@
 
 ## Features
 
-- [x] Find unconstrained delegations
-- [x] Find constrained delegations
-- [x] Find constrained delegations with protocol transition
-- [x] Find resource-based constrained delegations
+- [x] Audit mode:
+  - [x] Audit existing unconstrained delegations
+  - [x] Audit existing constrained delegations with or without protocol transition
+  - [x] Audit existing resource-based constrained delegations
+- [x] Add mode:
+  - [x] Add new unconstrained delegations
+  - [x] Add new constrained delegations with or without protocol transition
+  - [x] Add new resource-based constrained delegations
+- [x] Find mode:
+  - [x] Find unconstrained delegations
+  - [x] Find constrained delegations with or without protocol transition
+  - [x] Find resource-based constrained delegations
+- [x] Remove mode:
+  - [x] Remove existing unconstrained delegations
+  - [x] Remove existing constrained delegations with or without protocol transition
+  - [x] Remove existing resource-based constrained delegations
+
+## Demonstration
+
+
 
 ## Usage
 
-```
-$ ./Delegations - by Remi GASCOU (Podalirius) @ TheManticoreProject - v1.0.0
+The first positional argument of the program is the mode:
 
-Usage: Delegations --domain <string> --username <string> [--password <string>] [--hashes <string>] [--debug] --dc-ip <string> [--ldap-port <tcp port>] [--use-ldaps] [--use-kerberos]
+```
+$ ./Delegations
+Delegations - by Remi GASCOU (Podalirius) @ TheManticoreProject - v1.0.0
+
+Usage: Delegations <add|audit|find|remove>
+
+   add     Add a constrained, unconstrained, or resource-based constrained delegation to a user or group.
+   audit   Audit constrained, unconstrained, and resource-based constrained delegations in Active Directory.
+   find    Find a constrained, unconstrained, or resource-based constrained delegation from a user or group.
+   remove  Remove a constrained, unconstrained, or resource-based constrained delegation from a user or group.
+
+```
+
+Then for modes `add`, `remove` and `find`, the second positional argument is the delegation type:
+
+```
+$ ./Delegations add 
+Delegations - by Remi GASCOU (Podalirius) @ TheManticoreProject - v1.0.0
+
+Usage: Delegations add <constrained|rbcd|unconstrained>
+
+   constrained    Add a constrained delegation to a user or group.
+   unconstrained  Add a unconstrained delegation to a user or group.
+   rbcd           Add a ressource-based delegation to a user or group.
+
+```
+
+For mode `audit` all delegation types are audited at once, no more positional arguments are needed, only options:
+
+```
+$ ./Delegations audit
+Delegations - by Remi GASCOU (Podalirius) @ TheManticoreProject - v1.0.0
+
+Usage: Delegations audit --domain <string> --username <string> [--password <string>] [--hashes <string>] [--debug] --dc-ip <string> [--ldap-port <tcp port>] [--use-ldaps] [--use-kerberos]
+
 
   Authentication:
     -d, --domain <string>   Active Directory domain to authenticate to.
@@ -39,11 +88,8 @@ Usage: Delegations --domain <string> --username <string> [--password <string>] [
     -lp, --ldap-port <tcp port> Port number to connect to LDAP server. (default: 389)
     -L, --use-ldaps             Use LDAPS instead of LDAP. (default: false)
     -k, --use-kerberos          Use Kerberos instead of NTLM. (default: false)
+
 ```
-
-## Demonstration
-
-
 
 ## Contributing
 

@@ -45,6 +45,13 @@ func AddUnconstrainedDelegation(ldapHost string, ldapPort int, creds *credential
 			return fmt.Errorf("error converting userAccountControl to integer: %s", err)
 		}
 
+		// Check if the TRUSTED_FOR_DELEGATION flag is already set
+		if (uacValue & int(ldap_attributes.UAF_TRUSTED_FOR_DELEGATION)) != 0 {
+			ldapSession.Close()
+			logger.Info(fmt.Sprintf("Unconstrained delegation already exists for %s", distinguishedName))
+			return nil
+		}
+
 		// Add TRUSTED_FOR_DELEGATION flag (0x80000)
 		uacValue |= int(ldap_attributes.UAF_TRUSTED_FOR_DELEGATION)
 

@@ -27,13 +27,12 @@ import (
 //		fmt.Printf("[error] Error creating credentials: %s\n", err)
 //		return
 //	}
-func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool) {
+func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool) error {
 	ldapSession := ldap.Session{}
 	ldapSession.InitSession(ldapHost, ldapPort, creds, useLdaps, useKerberos)
 	success, err := ldapSession.Connect()
 	if !success {
-		logger.Warn(fmt.Sprintf("Error performing LDAP search: %s\n", err))
-		return
+		return fmt.Errorf("error performing LDAP search: %s", err)
 	}
 
 	query := "(&"
@@ -46,8 +45,7 @@ func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credent
 	query += ")"
 	searchResults, err := ldapSession.QueryWholeSubtree("", query, []string{"sAMAccountType", "userAccountControl"})
 	if err != nil {
-		fmt.Printf("[error] Error performing LDAP search: %s\n", err)
-		return
+		return fmt.Errorf("error performing LDAP search: %s", err)
 	}
 
 	if len(searchResults) != 0 {
@@ -81,4 +79,6 @@ func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credent
 	}
 
 	ldapSession.Close()
+
+	return nil
 }

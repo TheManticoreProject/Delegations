@@ -31,13 +31,12 @@ import (
 //
 //	This function initializes an LDAP session, connects to the LDAP server, retrieves the domain information,
 //	and then closes the session. If any step fails, it prints an error message and returns.
-func AuditRessourceBasedConstrainedDelegations(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool) {
+func AuditRessourceBasedConstrainedDelegations(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool) error {
 	ldapSession := ldap.Session{}
 	ldapSession.InitSession(ldapHost, ldapPort, creds, useLdaps, useKerberos)
 	success, err := ldapSession.Connect()
 	if !success {
-		fmt.Printf("[error] Error connecting to LDAP: %s\n", err)
-		return
+		return fmt.Errorf("error connecting to LDAP: %s", err)
 	}
 
 	query := "(&"
@@ -50,8 +49,7 @@ func AuditRessourceBasedConstrainedDelegations(ldapHost string, ldapPort int, cr
 	query += ")"
 	searchResults, err := ldapSession.QueryWholeSubtree("", query, []string{})
 	if err != nil {
-		logger.Warn(fmt.Sprintf("Error performing LDAP search: %s\n", err))
-		return
+		return fmt.Errorf("error performing LDAP search: %s", err)
 	}
 
 	if len(searchResults) != 0 {
@@ -91,4 +89,6 @@ func AuditRessourceBasedConstrainedDelegations(ldapHost string, ldapPort int, cr
 	}
 
 	ldapSession.Close()
+
+	return nil
 }

@@ -45,6 +45,13 @@ func RemoveUnconstrainedDelegation(ldapHost string, ldapPort int, creds *credent
 			return fmt.Errorf("error converting userAccountControl to integer: %s", err)
 		}
 
+		// Check if the TRUSTED_FOR_DELEGATION flag is set
+		if (uacValue & int(ldap_attributes.UAF_TRUSTED_FOR_DELEGATION)) == 0 {
+			ldapSession.Close()
+			logger.Info(fmt.Sprintf("No Unconstrained Delegation was setup on this object: %s", distinguishedName))
+			return nil
+		}
+
 		// Remove TRUSTED_FOR_DELEGATION flag (0x80000)
 		uacValue &= ^int(ldap_attributes.UAF_TRUSTED_FOR_DELEGATION)
 

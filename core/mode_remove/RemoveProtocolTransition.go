@@ -10,6 +10,18 @@ import (
 	"github.com/TheManticoreProject/Manticore/windows/credentials"
 )
 
+// RemoveProtocolTransition removes the protocol transition from a user or computer account.
+//
+//	Parameters:
+//		ldapHost (string): The LDAP host to connect to.
+//		ldapPort (int): The LDAP port to connect to.
+//		creds (*credentials.Credentials): The credentials to use for the LDAP connection.
+//		useLdaps (bool): Whether to use LDAPS for the LDAP connection.
+//		useKerberos (bool): Whether to use Kerberos for the LDAP connection.
+//		distinguishedName (string): The distinguished name of the user or computer account to remove the protocol transition from.
+//
+//	Returns:
+//		error: An error if the operation fails, nil otherwise.
 func RemoveProtocolTransition(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string) error {
 	ldapSession := ldap.Session{}
 	ldapSession.InitSession(ldapHost, ldapPort, creds, useLdaps, useKerberos)

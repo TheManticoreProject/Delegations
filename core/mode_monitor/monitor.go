@@ -131,12 +131,12 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 				flag := int(ldap_attributes.UAF_TRUSTED_FOR_DELEGATION)
 				if oldUAC&flag == 0 {
 					if newUAC&flag == flag {
-						messages = append(messages, fmt.Sprintf("  | Unconstrained delegation has been set (flag UAF_TRUSTED_FOR_DELEGATION)\x1b[0m"))
+						messages = append(messages, fmt.Sprintf("  │ Unconstrained delegation has been set (flag UAF_TRUSTED_FOR_DELEGATION)\x1b[0m"))
 					}
 				}
 				if oldUAC&flag == flag {
 					if newUAC&flag == 0 {
-						messages = append(messages, fmt.Sprintf("  | Unconstrained delegation has been removed (flag UAF_TRUSTED_FOR_DELEGATION)\x1b[0m"))
+						messages = append(messages, fmt.Sprintf("  │ Unconstrained delegation has been removed (flag UAF_TRUSTED_FOR_DELEGATION)\x1b[0m"))
 					}
 				}
 
@@ -144,12 +144,12 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 				flag = int(ldap_attributes.UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)
 				if oldUAC&flag == 0 {
 					if newUAC&flag == flag {
-						messages = append(messages, fmt.Sprintf("  | Constrained delegation with protocol transition has been set (flag UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)\x1b[0m"))
+						messages = append(messages, fmt.Sprintf("  │ Constrained delegation with protocol transition has been set (flag UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)\x1b[0m"))
 					}
 				}
 				if oldUAC&flag == flag {
 					if newUAC&flag == 0 {
-						messages = append(messages, fmt.Sprintf("  | Constrained delegation with protocol transition has been removed (flag UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)\x1b[0m"))
+						messages = append(messages, fmt.Sprintf("  │ Constrained delegation with protocol transition has been removed (flag UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)\x1b[0m"))
 					}
 				}
 			}
@@ -159,13 +159,13 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 				// Check for added values
 				for _, newValue := range newDelegationMap[dn].msDSAllowedToDelegateTo {
 					if !slices.Contains(delegationMap[dn].msDSAllowedToDelegateTo, newValue) {
-						constrainedDelegationMessages = append(constrainedDelegationMessages, fmt.Sprintf("  |   | \x1b[1;92mValue added to msDS-AllowedToDelegateTo: %s\x1b[0m", newValue))
+						constrainedDelegationMessages = append(constrainedDelegationMessages, fmt.Sprintf("  │   \x1b[1;92m+ Value added to msDS-AllowedToDelegateTo: %s\x1b[0m", newValue))
 					}
 				}
 				// Check for removed values
 				for _, oldValue := range delegationMap[dn].msDSAllowedToDelegateTo {
 					if !slices.Contains(newDelegationMap[dn].msDSAllowedToDelegateTo, oldValue) {
-						constrainedDelegationMessages = append(constrainedDelegationMessages, fmt.Sprintf("  |   | \x1b[1;91mValue removed from msDS-AllowedToDelegateTo: %s\x1b[0m", oldValue))
+						constrainedDelegationMessages = append(constrainedDelegationMessages, fmt.Sprintf("  │   \x1b[1;91m- Value removed from msDS-AllowedToDelegateTo: %s\x1b[0m", oldValue))
 					}
 				}
 			}
@@ -175,24 +175,29 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 				// Check for added values
 				for _, newValue := range newDelegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity {
 					if !slices.Contains(delegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity, newValue) {
-						resourceBasedConstrainedDelegationMessages = append(resourceBasedConstrainedDelegationMessages, fmt.Sprintf("  |   | \x1b[1;92mValue added to msDS-AllowedToActOnBehalfOfOtherIdentity: %s\x1b[0m", newValue))
+						resourceBasedConstrainedDelegationMessages = append(resourceBasedConstrainedDelegationMessages, fmt.Sprintf("  │   \x1b[1;92m+ Value added to msDS-AllowedToActOnBehalfOfOtherIdentity: %s\x1b[0m", newValue))
 					}
 				}
 				// Check for removed values
 				for _, oldValue := range delegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity {
 					if !slices.Contains(newDelegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity, oldValue) {
-						resourceBasedConstrainedDelegationMessages = append(resourceBasedConstrainedDelegationMessages, fmt.Sprintf("  |   | \x1b[1;91mValue removed from msDS-AllowedToActOnBehalfOfOtherIdentity: %s\x1b[0m", oldValue))
+						resourceBasedConstrainedDelegationMessages = append(resourceBasedConstrainedDelegationMessages, fmt.Sprintf("  │   \x1b[1;91m- Value removed from msDS-AllowedToActOnBehalfOfOtherIdentity: %s\x1b[0m", oldValue))
 					}
 				}
 			}
 
 			if len(constrainedDelegationMessages) > 0 {
-				messages = append(messages, fmt.Sprintf("  | Constrained delegation messages:"))
+				flag := int(ldap_attributes.UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)
+				if newUAC&flag == flag {
+					messages = append(messages, fmt.Sprintf("  │ Constrained delegation (with protocol transition) to:"))
+				} else {
+					messages = append(messages, fmt.Sprintf("  │ Constrained delegation to:"))
+				}
 				messages = append(messages, constrainedDelegationMessages...)
 			}
 
 			if len(resourceBasedConstrainedDelegationMessages) > 0 {
-				messages = append(messages, fmt.Sprintf("  | Resource-based constrained delegation messages:"))
+				messages = append(messages, fmt.Sprintf("  │ Resource-based constrained delegation:"))
 				messages = append(messages, resourceBasedConstrainedDelegationMessages...)
 			}
 

@@ -3,7 +3,7 @@ module github.com/TheManticoreProject/Delegations
 go 1.24.0
 
 require (
-	github.com/TheManticoreProject/Manticore v1.0.0
+	github.com/TheManticoreProject/Manticore v1.0.1
 	github.com/TheManticoreProject/goopts v1.2.1
 )
 

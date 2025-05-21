@@ -9,6 +9,19 @@ import (
 	"github.com/TheManticoreProject/Manticore/windows/credentials"
 )
 
+// AddConstrainedDelegation adds a constrained delegation to a user or computer account.
+//
+//	Parameters:
+//		ldapHost (string): The LDAP host to connect to.
+//		ldapPort (int): The LDAP port to connect to.
+//		creds (*credentials.Credentials): The credentials to use for the LDAP connection.
+//		useLdaps (bool): Whether to use LDAPS for the LDAP connection.
+//		useKerberos (bool): Whether to use Kerberos for the LDAP connection.
+//		distinguishedName (string): The distinguished name of the user or computer account to add the constrained delegation to.
+//		allowedToDelegateTo ([]string): The list of users or computers that the account is allowed to delegate to.
+//
+//	Returns:
+//		error: An error if the operation fails, nil otherwise.
 func AddConstrainedDelegation(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, allowedToDelegateTo []string) error {
 	ldapSession := ldap.Session{}
 	ldapSession.InitSession(ldapHost, ldapPort, creds, useLdaps, useKerberos)
@@ -29,17 +42,17 @@ func AddConstrainedDelegation(ldapHost string, ldapPort int, creds *credentials.
 		for _, value := range allowedToDelegateTo {
 			if !slices.Contains(values, value) {
 				values = append(values, value)
+			} else {
+				logger.Info(fmt.Sprintf("Value %s is already present in msDS-AllowedToDelegateTo, not adding it again", value))
 			}
 		}
 
-		modifyRequest := ldap.NewModifyRequest(distinguishedName)
-		modifyRequest.Overwrite("msDS-AllowedToDelegateTo", values)
-		err = ldapSession.Modify(modifyRequest)
+		err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToDelegateTo", values)
 		if err != nil {
 			return fmt.Errorf("error adding constrained delegation of %s to %s: %s", distinguishedName, allowedToDelegateTo, err)
 		}
 
-		logger.Info(fmt.Sprintf("Constrained delegation added for %s\n", distinguishedName))
+		logger.Info(fmt.Sprintf("Constrained delegation added for %s", distinguishedName))
 
 	} else {
 		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)

@@ -18,15 +18,12 @@ import (
 //	creds (*credentials.Credentials): The credentials for authentication.
 //	useLdaps (bool): A flag indicating whether to use LDAPS (LDAP over SSL).
 //	useKerberos (bool): A flag indicating whether to use Kerberos for authentication.
+//	debug (bool): A flag indicating whether to print debug information.
 //
-// Example:
+// Returns:
 //
-//	creds, err := credentials.NewCredentials("EXAMPLE", "user", "password", "")
-//	if err != nil {
-//		fmt.Printf("[error] Error creating credentials: %s\n", err)
-//		return
-//	}
-func FindUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool) error {
+//	An error if the operation fails, nil otherwise.
+func FindUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, debug bool) error {
 	ldapSession := ldap.Session{}
 	ldapSession.InitSession(ldapHost, ldapPort, creds, useLdaps, useKerberos)
 	success, err := ldapSession.Connect()

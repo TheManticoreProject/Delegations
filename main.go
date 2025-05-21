@@ -7,6 +7,7 @@ import (
 	"github.com/TheManticoreProject/Delegations/core/mode_audit"
 	"github.com/TheManticoreProject/Delegations/core/mode_find"
 	"github.com/TheManticoreProject/Delegations/core/mode_monitor"
+	"github.com/TheManticoreProject/Delegations/core/mode_remove"
 	"github.com/TheManticoreProject/Manticore/logger"
 	"github.com/TheManticoreProject/Manticore/windows/credentials"
 	"github.com/TheManticoreProject/goopts/parser"
@@ -21,9 +22,10 @@ var (
 
 	// Delegations
 	withProtocolTransition                bool
+	removeProtocolTransition              bool
 	distinguishedName                     string
 	allowedToDelegateTo                   []string
-	allowedToActOnBehalfOfAnotherIdentity string
+	allowedToActOnBehalfOfAnotherIdentity []string
 
 	// Authentication
 	authDomain   string
@@ -58,10 +60,11 @@ func parseArgs() {
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_add_constrained_group_config.NewBoolArgument(&debug, "-d", "--debug", false, "Debug mode.")
-		subparser_add_constrained_group_config.NewBoolArgument(&withProtocolTransition, "-w", "--with-protocol-transition", false, "Enable protocol transition.")
-		subparser_add_constrained_group_config.NewStringArgument(&distinguishedName, "-n", "--distinguished-name", "", true, "Distinguished name of the user or group to add the delegation to.")
-		subparser_add_constrained_group_config.NewListOfStringsArgument(&allowedToDelegateTo, "-d", "--allowed-to-delegate-to", []string{}, true, "User or group to delegate to.")
+		subparser_add_constrained_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_add_constrained_group_config.NewBoolArgument(&withProtocolTransition, "-w", "--with-protocol-transition", false, "Enable protocol transition on this object on this object.")
+		subparser_add_constrained_group_config.NewBoolArgument(&removeProtocolTransition, "-r", "--remove-protocol-transition", false, "Disable protocol transition on this object.")
+		subparser_add_constrained_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to add the delegation to.")
+		subparser_add_constrained_group_config.NewListOfStringsArgument(&allowedToDelegateTo, "-a", "--allowed-to-delegate-to", []string{}, true, "User or group to delegate to.")
 	}
 	// LDAP Connection Settings
 	subparser_add_constrained_group_ldapSettings, err := subparser_add_constrained.NewArgumentGroup("LDAP Connection Settings")
@@ -92,10 +95,8 @@ func parseArgs() {
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_add_unconstrained_group_config.NewBoolArgument(&debug, "-d", "--debug", false, "Debug mode.")
-		subparser_add_unconstrained_group_config.NewBoolArgument(&withProtocolTransition, "-w", "--with-protocol-transition", false, "Enable protocol transition.")
-		subparser_add_unconstrained_group_config.NewStringArgument(&distinguishedName, "-n", "--distinguished-name", "", true, "Distinguished name of the user or group to add the delegation to.")
-		subparser_add_unconstrained_group_config.NewListOfStringsArgument(&allowedToDelegateTo, "-d", "--allowed-to-delegate-to", []string{}, true, "User or group to delegate to.")
+		subparser_add_unconstrained_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_add_unconstrained_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to add the delegation to.")
 	}
 	// LDAP Connection Settings
 	subparser_add_unconstrained_group_ldapSettings, err := subparser_add_unconstrained.NewArgumentGroup("LDAP Connection Settings")
@@ -126,10 +127,9 @@ func parseArgs() {
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_add_ressource_based_group_config.NewBoolArgument(&debug, "-d", "--debug", false, "Debug mode.")
-		subparser_add_ressource_based_group_config.NewBoolArgument(&withProtocolTransition, "-w", "--with-protocol-transition", false, "Enable protocol transition.")
-		subparser_add_ressource_based_group_config.NewStringArgument(&distinguishedName, "-n", "--distinguished-name", "", true, "Distinguished name of the user or group to add the delegation to.")
-		subparser_add_ressource_based_group_config.NewStringArgument(&allowedToActOnBehalfOfAnotherIdentity, "-a", "--allowed-to-act-on-behalf-of-another-identity", "", true, "User or group to act on behalf of.")
+		subparser_add_ressource_based_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_add_ressource_based_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to add the delegation to.")
+		subparser_add_ressource_based_group_config.NewListOfStringsArgument(&allowedToActOnBehalfOfAnotherIdentity, "-a", "--allowed-to-act-on-behalf-of-another-identity", []string{}, true, "User or group to act on behalf of.")
 	}
 	// LDAP Connection Settings
 	subparser_add_ressource_based_group_ldapSettings, err := subparser_add_ressource_based.NewArgumentGroup("LDAP Connection Settings")
@@ -159,7 +159,7 @@ func parseArgs() {
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_audit_group_config.NewBoolArgument(&debug, "-d", "--debug", false, "Debug mode.")
+		subparser_audit_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
 	}
 	// LDAP Connection Settings
 	subparser_audit_group_ldapSettings, err := subparser_audit.NewArgumentGroup("LDAP Connection Settings")
@@ -194,7 +194,10 @@ func parseArgs() {
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_find_constrained_group_config.NewBoolArgument(&debug, "-d", "--debug", false, "Debug mode.")
+		subparser_find_constrained_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_find_constrained_group_config.NewBoolArgument(&withProtocolTransition, "-w", "--with-protocol-transition", false, "Enable protocol transition on this object on this object.")
+		subparser_find_constrained_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to search for delegations.")
+		subparser_find_constrained_group_config.NewListOfStringsArgument(&allowedToDelegateTo, "-a", "--allowed-to-delegate-to", []string{}, true, "User or group to delegate to.")
 	}
 	// LDAP Connection Settings
 	subparser_find_constrained_group_ldapSettings, err := subparser_find_constrained.NewArgumentGroup("LDAP Connection Settings")
@@ -225,7 +228,9 @@ func parseArgs() {
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_find_unconstrained_group_config.NewBoolArgument(&debug, "-d", "--debug", false, "Debug mode.")
+		subparser_find_unconstrained_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_find_unconstrained_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to search for delegations.")
+
 	}
 	// LDAP Connection Settings
 	subparser_find_unconstrained_group_ldapSettings, err := subparser_find_unconstrained.NewArgumentGroup("LDAP Connection Settings")
@@ -256,7 +261,9 @@ func parseArgs() {
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_find_ressource_based_group_config.NewBoolArgument(&debug, "-d", "--debug", false, "Debug mode.")
+		subparser_find_ressource_based_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_find_ressource_based_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to add the delegation to.")
+		subparser_find_ressource_based_group_config.NewListOfStringsArgument(&allowedToActOnBehalfOfAnotherIdentity, "-a", "--allowed-to-act-on-behalf-of-another-identity", []string{}, true, "User or group to act on behalf of.")
 	}
 	// LDAP Connection Settings
 	subparser_find_ressource_based_group_ldapSettings, err := subparser_find_ressource_based.NewArgumentGroup("LDAP Connection Settings")
@@ -291,7 +298,11 @@ func parseArgs() {
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_remove_constrained_group_config.NewBoolArgument(&debug, "-d", "--debug", false, "Debug mode.")
+		subparser_remove_constrained_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_remove_constrained_group_config.NewBoolArgument(&withProtocolTransition, "-w", "--with-protocol-transition", false, "Enable protocol transition on this object on this object.")
+		subparser_remove_constrained_group_config.NewBoolArgument(&removeProtocolTransition, "-r", "--remove-protocol-transition", false, "Disable protocol transition on this object.")
+		subparser_remove_constrained_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to remove for delegations on.")
+		subparser_remove_constrained_group_config.NewListOfStringsArgument(&allowedToDelegateTo, "-a", "--allowed-to-delegate-to", []string{}, true, "User or group to delegate to.")
 	}
 	// LDAP Connection Settings
 	subparser_remove_constrained_group_ldapSettings, err := subparser_remove_constrained.NewArgumentGroup("LDAP Connection Settings")
@@ -322,7 +333,8 @@ func parseArgs() {
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_remove_unconstrained_group_config.NewBoolArgument(&debug, "-d", "--debug", false, "Debug mode.")
+		subparser_remove_unconstrained_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_remove_unconstrained_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to remove the delegations on.")
 	}
 	// LDAP Connection Settings
 	subparser_remove_unconstrained_group_ldapSettings, err := subparser_remove_unconstrained.NewArgumentGroup("LDAP Connection Settings")
@@ -353,7 +365,9 @@ func parseArgs() {
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_remove_ressource_based_group_config.NewBoolArgument(&debug, "-d", "--debug", false, "Debug mode.")
+		subparser_remove_ressource_based_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_remove_ressource_based_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to remove delegations on.")
+		subparser_remove_ressource_based_group_config.NewListOfStringsArgument(&allowedToActOnBehalfOfAnotherIdentity, "-a", "--allowed-to-act-on-behalf-of-another-identity", []string{}, true, "User or group to act on behalf of.")
 	}
 	// LDAP Connection Settings
 	subparser_remove_ressource_based_group_ldapSettings, err := subparser_remove_ressource_based.NewArgumentGroup("LDAP Connection Settings")
@@ -396,13 +410,19 @@ func main() {
 					logger.Warn(fmt.Sprintf("Error adding constrained delegation with protocol transition: %s\n", err))
 				}
 			} else {
+				if removeProtocolTransition {
+					err = mode_remove.RemoveProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName)
+					if err != nil {
+						logger.Warn(fmt.Sprintf("Error removing protocol transition: %s\n", err))
+					}
+				}
 				err = mode_add.AddConstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo)
 				if err != nil {
 					logger.Warn(fmt.Sprintf("Error adding constrained delegation: %s\n", err))
 				}
 			}
 		} else if delegationType == "unconstrained" {
-			err = mode_add.AddUnconstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo)
+			err = mode_add.AddUnconstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName)
 			if err != nil {
 				logger.Warn(fmt.Sprintf("Error adding unconstrained delegation: %s\n", err))
 			}
@@ -411,40 +431,95 @@ func main() {
 			if err != nil {
 				logger.Warn(fmt.Sprintf("Error adding ressource-based constrained delegation: %s\n", err))
 			}
+		} else if delegationType == "protocol-transition" {
+			err = mode_add.AddProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName)
+			if err != nil {
+				logger.Warn(fmt.Sprintf("Error adding protocol transition: %s\n", err))
+			}
 		}
 
 	} else if mode == "audit" {
-		mode_audit.AuditUnconstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
-		mode_audit.AuditConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
-		mode_audit.AuditConstrainedDelegationsWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos)
-		mode_audit.AuditRessourceBasedConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+		err = mode_audit.AuditUnconstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+		if err != nil {
+			logger.Warn(fmt.Sprintf("Error auditing unconstrained delegations: %s\n", err))
+		}
+		err = mode_audit.AuditConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+		if err != nil {
+			logger.Warn(fmt.Sprintf("Error auditing constrained delegations: %s\n", err))
+		}
+		err = mode_audit.AuditConstrainedDelegationsWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos)
+		if err != nil {
+			logger.Warn(fmt.Sprintf("Error auditing constrained delegations with protocol transition: %s\n", err))
+		}
+		err = mode_audit.AuditRessourceBasedConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+		if err != nil {
+			logger.Warn(fmt.Sprintf("Error auditing ressource-based constrained delegations: %s\n", err))
+		}
 
 	} else if mode == "find" {
 		if delegationType == "constrained" {
 			if withProtocolTransition {
-				mode_find.FindConstrainedDelegationsWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos)
+				err = mode_find.FindConstrainedDelegationsWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos)
+				if err != nil {
+					logger.Warn(fmt.Sprintf("Error finding constrained delegations with protocol transition: %s\n", err))
+				}
 			} else {
-				mode_find.FindConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+				err = mode_find.FindConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+				if err != nil {
+					logger.Warn(fmt.Sprintf("Error finding constrained delegations: %s\n", err))
+				}
 			}
 		} else if delegationType == "unconstrained" {
-			mode_find.FindUnconstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+			err = mode_find.FindUnconstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+			if err != nil {
+				logger.Warn(fmt.Sprintf("Error finding unconstrained delegations: %s\n", err))
+			}
 		} else if delegationType == "rbcd" {
-			mode_find.FindRessourceBasedConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+			err = mode_find.FindRessourceBasedConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+			if err != nil {
+				logger.Warn(fmt.Sprintf("Error finding ressource-based constrained delegations: %s\n", err))
+			}
 		}
 
-		// } else if mode == "remove" {
-		// 	if delegationType == "constrained" {
-		// 		mode_remove.RemoveConstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, AllowedToDelegateTo)
-		// 		mode_remove.RemoveConstrainedDelegationWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, AllowedToDelegateTo)
-		// 	} else if delegationType == "unconstrained" {
-		// 		mode_remove.RemoveUnconstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, AllowedToDelegateTo)
-		// 	} else if delegationType == "rbcd" {
-		// 		mode_remove.RemoveRessourceBasedConstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberosdistinguishedName, AllowedToDelegateTo)
-		// 	}
+	} else if mode == "remove" {
+		if delegationType == "constrained" {
+			if withProtocolTransition {
+				err = mode_remove.RemoveConstrainedDelegationWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo)
+				if err != nil {
+					logger.Warn(fmt.Sprintf("Error removing constrained delegation with protocol transition: %s\n", err))
+				}
+			} else {
+				if removeProtocolTransition {
+					err = mode_remove.RemoveProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName)
+					if err != nil {
+						logger.Warn(fmt.Sprintf("Error removing protocol transition: %s\n", err))
+					}
+				}
+				err = mode_remove.RemoveConstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo)
+				if err != nil {
+					logger.Warn(fmt.Sprintf("Error removing constrained delegation: %s\n", err))
+				}
+			}
+		} else if delegationType == "unconstrained" {
+			err = mode_remove.RemoveUnconstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName)
+			if err != nil {
+				logger.Warn(fmt.Sprintf("Error removing unconstrained delegation: %s\n", err))
+			}
+		} else if delegationType == "rbcd" {
+			err = mode_remove.RemoveRessourceBasedConstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo)
+			if err != nil {
+				logger.Warn(fmt.Sprintf("Error removing ressource-based constrained delegation: %s\n", err))
+			}
+		} else if delegationType == "protocol-transition" {
+			err = mode_remove.RemoveProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName)
+			if err != nil {
+				logger.Warn(fmt.Sprintf("Error removing protocol transition: %s\n", err))
+			}
+		}
 
 	} else if mode == "monitor" {
 		mode_monitor.MonitorDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
 	}
 
-	logger.Print("Done")
+	logger.Print("Done.")
 }

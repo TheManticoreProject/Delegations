@@ -18,21 +18,12 @@ import (
 //	creds (*credentials.Credentials): The credentials for authentication.
 //	useLdaps (bool): A flag indicating whether to use LDAPS (LDAP over SSL).
 //	useKerberos (bool): A flag indicating whether to use Kerberos for authentication.
+//	debug (bool): A flag indicating whether to print debug information.
 //
-// Example:
+// Returns:
 //
-//	creds, err := credentials.NewCredentials("EXAMPLE", "user", "password", "")
-//	if err != nil {
-//		fmt.Printf("[error] Error creating credentials: %s\n", err)
-//		return
-//	}
-//	FindConstrainedDelegations("ldap.example.com", 389, creds, false, true)
-//
-// Note:
-//
-//	This function initializes an LDAP session, connects to the LDAP server, retrieves the domain information,
-//	and then closes the session. If any step fails, it prints an error message and returns.
-func AuditConstrainedDelegationsWithProtocolTransition(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool) error {
+//	An error if the operation fails, nil otherwise.
+func AuditConstrainedDelegationsWithProtocolTransition(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, debug bool) error {
 	ldapSession := ldap.Session{}
 	ldapSession.InitSession(ldapHost, ldapPort, creds, useLdaps, useKerberos)
 	success, err := ldapSession.Connect()

@@ -10,19 +10,21 @@ import (
 )
 
 // AddConstrainedDelegationWithProtocolTransition adds a constrained delegation with protocol transition to a user or computer account.
+
+// Parameters:
 //
-//	Parameters:
-//		ldapHost (string): The LDAP host to connect to.
-//		ldapPort (int): The LDAP port to connect to.
-//		creds (*credentials.Credentials): The credentials to use for the LDAP connection.
-//		useLdaps (bool): Whether to use LDAPS for the LDAP connection.
-//		useKerberos (bool): Whether to use Kerberos for the LDAP connection.
-//		distinguishedName (string): The distinguished name of the user or computer account to add the constrained delegation with protocol transition to.
-//		allowedToDelegateTo ([]string): The list of users or computers that the account is allowed to delegate to.
+//	ldapHost (string): The LDAP host to connect to.
+//	ldapPort (int): The LDAP port to connect to.
+//	creds (*credentials.Credentials): The credentials to use for the LDAP connection.
+//	useLdaps (bool): Whether to use LDAPS for the LDAP connection.
+//	useKerberos (bool): Whether to use Kerberos for the LDAP connection.
+//	distinguishedName (string): The distinguished name of the user or computer account to add the constrained delegation with protocol transition to.
+//	allowedToDelegateTo ([]string): The list of users or computers that the account is allowed to delegate to.
+//	debug (bool): A flag indicating whether to print debug information.
 //
 //	Returns:
 //		error: An error if the operation fails, nil otherwise.
-func AddConstrainedDelegationWithProtocolTransition(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, allowedToDelegateTo []string) error {
+func AddConstrainedDelegationWithProtocolTransition(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, allowedToDelegateTo []string, debug bool) error {
 	ldapSession := ldap.Session{}
 	ldapSession.InitSession(ldapHost, ldapPort, creds, useLdaps, useKerberos)
 	success, err := ldapSession.Connect()
@@ -43,7 +45,7 @@ func AddConstrainedDelegationWithProtocolTransition(ldapHost string, ldapPort in
 	}
 
 	// Activate protocol transition (TRUSTED_TO_AUTH_FOR_DELEGATION flag)
-	AddProtocolTransition(ldapHost, ldapPort, creds, useLdaps, useKerberos, distinguishedName)
+	AddProtocolTransition(ldapHost, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 
 	// Add constrained delegation
 	if len(searchResults) > 0 {

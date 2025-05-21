@@ -19,10 +19,11 @@ import (
 //		useKerberos (bool): Whether to use Kerberos for the LDAP connection.
 //		distinguishedName (string): The distinguished name of the user or computer account to add the ressource based constrained delegation to.
 //		allowedToActOnBehalfOfAnotherIdentity ([]string): The list of users or computers that the account is allowed to delegate to.
+//		debug (bool): A flag indicating whether to print debug information.
 //
 //	Returns:
 //		error: An error if the operation fails, nil otherwise.
-func AddRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, allowedToActOnBehalfOfAnotherIdentity []string) error {
+func AddRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, allowedToActOnBehalfOfAnotherIdentity []string, debug bool) error {
 	ldapSession := ldap.Session{}
 	ldapSession.InitSession(ldapHost, ldapPort, creds, useLdaps, useKerberos)
 	success, err := ldapSession.Connect()
@@ -45,6 +46,10 @@ func AddRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, creds
 			} else {
 				logger.Info(fmt.Sprintf("Value %s is already present in msDS-AllowedToActOnBehalfOfOtherIdentity, not adding it again", value))
 			}
+		}
+
+		if debug {
+			logger.Info(fmt.Sprintf("Updated msDS-AllowedToActOnBehalfOfOtherIdentity values: %v", values))
 		}
 
 		err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity", values)

@@ -19,10 +19,11 @@ import (
 //		useKerberos (bool): Whether to use Kerberos for the LDAP connection.
 //		distinguishedName (string): The distinguished name of the user or computer account to add the constrained delegation to.
 //		allowedToDelegateTo ([]string): The list of users or computers that the account is allowed to delegate to.
+//		debug (bool): A flag indicating whether to print debug information.
 //
 //	Returns:
 //		error: An error if the operation fails, nil otherwise.
-func AddConstrainedDelegation(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, allowedToDelegateTo []string) error {
+func AddConstrainedDelegation(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, allowedToDelegateTo []string, debug bool) error {
 	ldapSession := ldap.Session{}
 	ldapSession.InitSession(ldapHost, ldapPort, creds, useLdaps, useKerberos)
 	success, err := ldapSession.Connect()

@@ -19,10 +19,11 @@ import (
 //		useLdaps (bool): Whether to use LDAPS for the LDAP connection.
 //		useKerberos (bool): Whether to use Kerberos for the LDAP connection.
 //		distinguishedName (string): The distinguished name of the user or computer account to add the unconstrained delegation to.
+//		debug (bool): A flag indicating whether to print debug information.
 //
 //	Returns:
 //		error: An error if the operation fails, nil otherwise.
-func AddUnconstrainedDelegation(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string) error {
+func AddUnconstrainedDelegation(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, debug bool) error {
 	ldapSession := ldap.Session{}
 	ldapSession.InitSession(ldapHost, ldapPort, creds, useLdaps, useKerberos)
 	success, err := ldapSession.Connect()

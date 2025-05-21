@@ -87,38 +87,6 @@ func parseArgs() {
 		subparser_add_constrained_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
 	}
 
-	// Add subparser for add unconstrained delegation ========================================================================================
-	subparser_add_unconstrained := subparser_add.AddSubParser("unconstrained", "Add a unconstrained delegation to a user or group.")
-	subparser_add_unconstrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
-	// Configuration flags
-	subparser_add_unconstrained_group_config, err := subparser_add_unconstrained.NewArgumentGroup("Configuration")
-	if err != nil {
-		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
-	} else {
-		subparser_add_unconstrained_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
-		subparser_add_unconstrained_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to add the delegation to.")
-	}
-	// LDAP Connection Settings
-	subparser_add_unconstrained_group_ldapSettings, err := subparser_add_unconstrained.NewArgumentGroup("LDAP Connection Settings")
-	if err != nil {
-		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
-	} else {
-		subparser_add_unconstrained_group_ldapSettings.NewStringArgument(&domainController, "-dc", "--dc-ip", "", true, "IP Address of the domain controller or KDC (Key Distribution Center) for Kerberos. If omitted, it will use the domain part (FQDN) specified in the identity parameter.")
-		subparser_add_unconstrained_group_ldapSettings.NewTcpPortArgument(&ldapPort, "-lp", "--ldap-port", 389, false, "Port number to connect to LDAP server.")
-		subparser_add_unconstrained_group_ldapSettings.NewBoolArgument(&useLdaps, "-L", "--use-ldaps", false, "Use LDAPS instead of LDAP.")
-		subparser_add_unconstrained_group_ldapSettings.NewBoolArgument(&useKerberos, "-k", "--use-kerberos", false, "Use Kerberos instead of NTLM.")
-	}
-	// Authentication flags
-	subparser_add_unconstrained_group_auth, err := subparser_add_unconstrained.NewArgumentGroup("Authentication")
-	if err != nil {
-		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
-	} else {
-		subparser_add_unconstrained_group_auth.NewStringArgument(&authDomain, "-d", "--domain", "", true, "Active Directory domain to authenticate to.")
-		subparser_add_unconstrained_group_auth.NewStringArgument(&authUsername, "-u", "--username", "", true, "User to authenticate as.")
-		subparser_add_unconstrained_group_auth.NewStringArgument(&authPassword, "-p", "--password", "", false, "Password to authenticate with.")
-		subparser_add_unconstrained_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
-	}
-
 	// Add subparser for add ressource_based delegation ========================================================================================
 	subparser_add_ressource_based := subparser_add.AddSubParser("rbcd", "Add a ressource-based delegation to a user or group.")
 	subparser_add_ressource_based.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
@@ -150,6 +118,38 @@ func parseArgs() {
 		subparser_add_ressource_based_group_auth.NewStringArgument(&authUsername, "-u", "--username", "", true, "User to authenticate as.")
 		subparser_add_ressource_based_group_auth.NewStringArgument(&authPassword, "-p", "--password", "", false, "Password to authenticate with.")
 		subparser_add_ressource_based_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
+	}
+
+	// Add subparser for add unconstrained delegation ========================================================================================
+	subparser_add_unconstrained := subparser_add.AddSubParser("unconstrained", "Add a unconstrained delegation to a user or group.")
+	subparser_add_unconstrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
+	// Configuration flags
+	subparser_add_unconstrained_group_config, err := subparser_add_unconstrained.NewArgumentGroup("Configuration")
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
+	} else {
+		subparser_add_unconstrained_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_add_unconstrained_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to add the delegation to.")
+	}
+	// LDAP Connection Settings
+	subparser_add_unconstrained_group_ldapSettings, err := subparser_add_unconstrained.NewArgumentGroup("LDAP Connection Settings")
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
+	} else {
+		subparser_add_unconstrained_group_ldapSettings.NewStringArgument(&domainController, "-dc", "--dc-ip", "", true, "IP Address of the domain controller or KDC (Key Distribution Center) for Kerberos. If omitted, it will use the domain part (FQDN) specified in the identity parameter.")
+		subparser_add_unconstrained_group_ldapSettings.NewTcpPortArgument(&ldapPort, "-lp", "--ldap-port", 389, false, "Port number to connect to LDAP server.")
+		subparser_add_unconstrained_group_ldapSettings.NewBoolArgument(&useLdaps, "-L", "--use-ldaps", false, "Use LDAPS instead of LDAP.")
+		subparser_add_unconstrained_group_ldapSettings.NewBoolArgument(&useKerberos, "-k", "--use-kerberos", false, "Use Kerberos instead of NTLM.")
+	}
+	// Authentication flags
+	subparser_add_unconstrained_group_auth, err := subparser_add_unconstrained.NewArgumentGroup("Authentication")
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
+	} else {
+		subparser_add_unconstrained_group_auth.NewStringArgument(&authDomain, "-d", "--domain", "", true, "Active Directory domain to authenticate to.")
+		subparser_add_unconstrained_group_auth.NewStringArgument(&authUsername, "-u", "--username", "", true, "User to authenticate as.")
+		subparser_add_unconstrained_group_auth.NewStringArgument(&authPassword, "-p", "--password", "", false, "Password to authenticate with.")
+		subparser_add_unconstrained_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
 	}
 
 	// audit mode ============================================================================================================
@@ -220,37 +220,36 @@ func parseArgs() {
 		subparser_find_constrained_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
 	}
 
-	// Find subparser for find unconstrained delegation ========================================================================================
-	subparser_find_unconstrained := subparser_find.AddSubParser("unconstrained", "Find a unconstrained delegation to a user or group.")
-	subparser_find_unconstrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
+	// Add subparser for add protocol transition ========================================================================================
+	subparser_add_protocoltransition := subparser_add.AddSubParser("protocoltransition", "Add a protocol transition to a user or group.")
+	subparser_add_protocoltransition.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
-	subparser_find_unconstrained_group_config, err := subparser_find_unconstrained.NewArgumentGroup("Configuration")
+	subparser_add_protocoltransition_group_config, err := subparser_add_protocoltransition.NewArgumentGroup("Configuration")
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_find_unconstrained_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
-		subparser_find_unconstrained_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to search for delegations.")
-
+		subparser_add_protocoltransition_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_add_protocoltransition_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to add the protocol transition to.")
 	}
 	// LDAP Connection Settings
-	subparser_find_unconstrained_group_ldapSettings, err := subparser_find_unconstrained.NewArgumentGroup("LDAP Connection Settings")
+	subparser_add_protocoltransition_group_ldapSettings, err := subparser_add_protocoltransition.NewArgumentGroup("LDAP Connection Settings")
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_find_unconstrained_group_ldapSettings.NewStringArgument(&domainController, "-dc", "--dc-ip", "", true, "IP Address of the domain controller or KDC (Key Distribution Center) for Kerberos. If omitted, it will use the domain part (FQDN) specified in the identity parameter.")
-		subparser_find_unconstrained_group_ldapSettings.NewTcpPortArgument(&ldapPort, "-lp", "--ldap-port", 389, false, "Port number to connect to LDAP server.")
-		subparser_find_unconstrained_group_ldapSettings.NewBoolArgument(&useLdaps, "-L", "--use-ldaps", false, "Use LDAPS instead of LDAP.")
-		subparser_find_unconstrained_group_ldapSettings.NewBoolArgument(&useKerberos, "-k", "--use-kerberos", false, "Use Kerberos instead of NTLM.")
+		subparser_add_protocoltransition_group_ldapSettings.NewStringArgument(&domainController, "-dc", "--dc-ip", "", true, "IP Address of the domain controller or KDC (Key Distribution Center) for Kerberos. If omitted, it will use the domain part (FQDN) specified in the identity parameter.")
+		subparser_add_protocoltransition_group_ldapSettings.NewTcpPortArgument(&ldapPort, "-lp", "--ldap-port", 389, false, "Port number to connect to LDAP server.")
+		subparser_add_protocoltransition_group_ldapSettings.NewBoolArgument(&useLdaps, "-L", "--use-ldaps", false, "Use LDAPS instead of LDAP.")
+		subparser_add_protocoltransition_group_ldapSettings.NewBoolArgument(&useKerberos, "-k", "--use-kerberos", false, "Use Kerberos instead of NTLM.")
 	}
 	// Authentication flags
-	subparser_find_unconstrained_group_auth, err := subparser_find_unconstrained.NewArgumentGroup("Authentication")
+	subparser_add_protocoltransition_group_auth, err := subparser_add_protocoltransition.NewArgumentGroup("Authentication")
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_find_unconstrained_group_auth.NewStringArgument(&authDomain, "-d", "--domain", "", true, "Active Directory domain to authenticate to.")
-		subparser_find_unconstrained_group_auth.NewStringArgument(&authUsername, "-u", "--username", "", true, "User to authenticate as.")
-		subparser_find_unconstrained_group_auth.NewStringArgument(&authPassword, "-p", "--password", "", false, "Password to authenticate with.")
-		subparser_find_unconstrained_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
+		subparser_add_protocoltransition_group_auth.NewStringArgument(&authDomain, "-d", "--domain", "", true, "Active Directory domain to authenticate to.")
+		subparser_add_protocoltransition_group_auth.NewStringArgument(&authUsername, "-u", "--username", "", true, "User to authenticate as.")
+		subparser_add_protocoltransition_group_auth.NewStringArgument(&authPassword, "-p", "--password", "", false, "Password to authenticate with.")
+		subparser_add_protocoltransition_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
 	}
 
 	// Find subparser for find ressource_based delegation ========================================================================================
@@ -284,6 +283,69 @@ func parseArgs() {
 		subparser_find_ressource_based_group_auth.NewStringArgument(&authUsername, "-u", "--username", "", true, "User to authenticate as.")
 		subparser_find_ressource_based_group_auth.NewStringArgument(&authPassword, "-p", "--password", "", false, "Password to authenticate with.")
 		subparser_find_ressource_based_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
+	}
+
+	// Find subparser for find unconstrained delegation ========================================================================================
+	subparser_find_unconstrained := subparser_find.AddSubParser("unconstrained", "Find a unconstrained delegation to a user or group.")
+	subparser_find_unconstrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
+	// Configuration flags
+	subparser_find_unconstrained_group_config, err := subparser_find_unconstrained.NewArgumentGroup("Configuration")
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
+	} else {
+		subparser_find_unconstrained_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_find_unconstrained_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to search for delegations.")
+
+	}
+	// LDAP Connection Settings
+	subparser_find_unconstrained_group_ldapSettings, err := subparser_find_unconstrained.NewArgumentGroup("LDAP Connection Settings")
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
+	} else {
+		subparser_find_unconstrained_group_ldapSettings.NewStringArgument(&domainController, "-dc", "--dc-ip", "", true, "IP Address of the domain controller or KDC (Key Distribution Center) for Kerberos. If omitted, it will use the domain part (FQDN) specified in the identity parameter.")
+		subparser_find_unconstrained_group_ldapSettings.NewTcpPortArgument(&ldapPort, "-lp", "--ldap-port", 389, false, "Port number to connect to LDAP server.")
+		subparser_find_unconstrained_group_ldapSettings.NewBoolArgument(&useLdaps, "-L", "--use-ldaps", false, "Use LDAPS instead of LDAP.")
+		subparser_find_unconstrained_group_ldapSettings.NewBoolArgument(&useKerberos, "-k", "--use-kerberos", false, "Use Kerberos instead of NTLM.")
+	}
+	// Authentication flags
+	subparser_find_unconstrained_group_auth, err := subparser_find_unconstrained.NewArgumentGroup("Authentication")
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
+	} else {
+		subparser_find_unconstrained_group_auth.NewStringArgument(&authDomain, "-d", "--domain", "", true, "Active Directory domain to authenticate to.")
+		subparser_find_unconstrained_group_auth.NewStringArgument(&authUsername, "-u", "--username", "", true, "User to authenticate as.")
+		subparser_find_unconstrained_group_auth.NewStringArgument(&authPassword, "-p", "--password", "", false, "Password to authenticate with.")
+		subparser_find_unconstrained_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
+	}
+
+	// monitor mode ============================================================================================================
+	subparser_monitor := ap.AddSubParser("monitor", "Monitor constrained, unconstrained, and resource-based constrained delegations in Active Directory.")
+	// Configuration flags
+	subparser_monitor_group_config, err := subparser_monitor.NewArgumentGroup("Configuration")
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
+	} else {
+		subparser_monitor_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+	}
+	// LDAP Connection Settings
+	subparser_monitor_group_ldapSettings, err := subparser_monitor.NewArgumentGroup("LDAP Connection Settings")
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
+	} else {
+		subparser_monitor_group_ldapSettings.NewStringArgument(&domainController, "-dc", "--dc-ip", "", true, "IP Address of the domain controller or KDC (Key Distribution Center) for Kerberos. If omitted, it will use the domain part (FQDN) specified in the identity parameter.")
+		subparser_monitor_group_ldapSettings.NewTcpPortArgument(&ldapPort, "-lp", "--ldap-port", 389, false, "Port number to connect to LDAP server.")
+		subparser_monitor_group_ldapSettings.NewBoolArgument(&useLdaps, "-L", "--use-ldaps", false, "Use LDAPS instead of LDAP.")
+		subparser_monitor_group_ldapSettings.NewBoolArgument(&useKerberos, "-k", "--use-kerberos", false, "Use Kerberos instead of NTLM.")
+	}
+	// Authentication flags
+	subparser_monitor_group_auth, err := subparser_monitor.NewArgumentGroup("Authentication")
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
+	} else {
+		subparser_monitor_group_auth.NewStringArgument(&authDomain, "-d", "--domain", "", true, "Active Directory domain to authenticate to.")
+		subparser_monitor_group_auth.NewStringArgument(&authUsername, "-u", "--username", "", true, "User to authenticate as.")
+		subparser_monitor_group_auth.NewStringArgument(&authPassword, "-p", "--password", "", false, "Password to authenticate with.")
+		subparser_monitor_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
 	}
 
 	// remove mode ============================================================================================================
@@ -325,36 +387,36 @@ func parseArgs() {
 		subparser_remove_constrained_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
 	}
 
-	// Remove subparser for remove unconstrained delegation ========================================================================================
-	subparser_remove_unconstrained := subparser_remove.AddSubParser("unconstrained", "Remove a unconstrained delegation to a user or group.")
-	subparser_remove_unconstrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
+	// Remove subparser for remove protocol transition ========================================================================================
+	subparser_remove_protocoltransition := subparser_remove.AddSubParser("protocoltransition", "Remove a protocol transition to a user or group.")
+	subparser_remove_protocoltransition.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
-	subparser_remove_unconstrained_group_config, err := subparser_remove_unconstrained.NewArgumentGroup("Configuration")
+	subparser_remove_protocoltransition_group_config, err := subparser_remove_protocoltransition.NewArgumentGroup("Configuration")
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_remove_unconstrained_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
-		subparser_remove_unconstrained_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to remove the delegations on.")
+		subparser_remove_protocoltransition_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_remove_protocoltransition_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to remove the delegations on.")
 	}
 	// LDAP Connection Settings
-	subparser_remove_unconstrained_group_ldapSettings, err := subparser_remove_unconstrained.NewArgumentGroup("LDAP Connection Settings")
+	subparser_remove_protocoltransition_group_ldapSettings, err := subparser_remove_protocoltransition.NewArgumentGroup("LDAP Connection Settings")
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_remove_unconstrained_group_ldapSettings.NewStringArgument(&domainController, "-dc", "--dc-ip", "", true, "IP Address of the domain controller or KDC (Key Distribution Center) for Kerberos. If omitted, it will use the domain part (FQDN) specified in the identity parameter.")
-		subparser_remove_unconstrained_group_ldapSettings.NewTcpPortArgument(&ldapPort, "-lp", "--ldap-port", 389, false, "Port number to connect to LDAP server.")
-		subparser_remove_unconstrained_group_ldapSettings.NewBoolArgument(&useLdaps, "-L", "--use-ldaps", false, "Use LDAPS instead of LDAP.")
-		subparser_remove_unconstrained_group_ldapSettings.NewBoolArgument(&useKerberos, "-k", "--use-kerberos", false, "Use Kerberos instead of NTLM.")
+		subparser_remove_protocoltransition_group_ldapSettings.NewStringArgument(&domainController, "-dc", "--dc-ip", "", true, "IP Address of the domain controller or KDC (Key Distribution Center) for Kerberos. If omitted, it will use the domain part (FQDN) specified in the identity parameter.")
+		subparser_remove_protocoltransition_group_ldapSettings.NewTcpPortArgument(&ldapPort, "-lp", "--ldap-port", 389, false, "Port number to connect to LDAP server.")
+		subparser_remove_protocoltransition_group_ldapSettings.NewBoolArgument(&useLdaps, "-L", "--use-ldaps", false, "Use LDAPS instead of LDAP.")
+		subparser_remove_protocoltransition_group_ldapSettings.NewBoolArgument(&useKerberos, "-k", "--use-kerberos", false, "Use Kerberos instead of NTLM.")
 	}
 	// Authentication flags
-	subparser_remove_unconstrained_group_auth, err := subparser_remove_unconstrained.NewArgumentGroup("Authentication")
+	subparser_remove_protocoltransition_group_auth, err := subparser_remove_protocoltransition.NewArgumentGroup("Authentication")
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
 	} else {
-		subparser_remove_unconstrained_group_auth.NewStringArgument(&authDomain, "-d", "--domain", "", true, "Active Directory domain to authenticate to.")
-		subparser_remove_unconstrained_group_auth.NewStringArgument(&authUsername, "-u", "--username", "", true, "User to authenticate as.")
-		subparser_remove_unconstrained_group_auth.NewStringArgument(&authPassword, "-p", "--password", "", false, "Password to authenticate with.")
-		subparser_remove_unconstrained_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
+		subparser_remove_protocoltransition_group_auth.NewStringArgument(&authDomain, "-d", "--domain", "", true, "Active Directory domain to authenticate to.")
+		subparser_remove_protocoltransition_group_auth.NewStringArgument(&authUsername, "-u", "--username", "", true, "User to authenticate as.")
+		subparser_remove_protocoltransition_group_auth.NewStringArgument(&authPassword, "-p", "--password", "", false, "Password to authenticate with.")
+		subparser_remove_protocoltransition_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
 	}
 
 	// Remove subparser for remove ressource_based delegation ========================================================================================
@@ -390,6 +452,38 @@ func parseArgs() {
 		subparser_remove_ressource_based_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
 	}
 
+	// Remove subparser for remove unconstrained delegation ========================================================================================
+	subparser_remove_unconstrained := subparser_remove.AddSubParser("unconstrained", "Remove a unconstrained delegation to a user or group.")
+	subparser_remove_unconstrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
+	// Configuration flags
+	subparser_remove_unconstrained_group_config, err := subparser_remove_unconstrained.NewArgumentGroup("Configuration")
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
+	} else {
+		subparser_remove_unconstrained_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_remove_unconstrained_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to remove the delegations on.")
+	}
+	// LDAP Connection Settings
+	subparser_remove_unconstrained_group_ldapSettings, err := subparser_remove_unconstrained.NewArgumentGroup("LDAP Connection Settings")
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
+	} else {
+		subparser_remove_unconstrained_group_ldapSettings.NewStringArgument(&domainController, "-dc", "--dc-ip", "", true, "IP Address of the domain controller or KDC (Key Distribution Center) for Kerberos. If omitted, it will use the domain part (FQDN) specified in the identity parameter.")
+		subparser_remove_unconstrained_group_ldapSettings.NewTcpPortArgument(&ldapPort, "-lp", "--ldap-port", 389, false, "Port number to connect to LDAP server.")
+		subparser_remove_unconstrained_group_ldapSettings.NewBoolArgument(&useLdaps, "-L", "--use-ldaps", false, "Use LDAPS instead of LDAP.")
+		subparser_remove_unconstrained_group_ldapSettings.NewBoolArgument(&useKerberos, "-k", "--use-kerberos", false, "Use Kerberos instead of NTLM.")
+	}
+	// Authentication flags
+	subparser_remove_unconstrained_group_auth, err := subparser_remove_unconstrained.NewArgumentGroup("Authentication")
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s\n", err))
+	} else {
+		subparser_remove_unconstrained_group_auth.NewStringArgument(&authDomain, "-d", "--domain", "", true, "Active Directory domain to authenticate to.")
+		subparser_remove_unconstrained_group_auth.NewStringArgument(&authUsername, "-u", "--username", "", true, "User to authenticate as.")
+		subparser_remove_unconstrained_group_auth.NewStringArgument(&authPassword, "-p", "--password", "", false, "Password to authenticate with.")
+		subparser_remove_unconstrained_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
+	}
+
 	ap.Parse()
 }
 
@@ -405,53 +499,53 @@ func main() {
 	if mode == "add" {
 		if delegationType == "constrained" {
 			if withProtocolTransition {
-				err = mode_add.AddConstrainedDelegationWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo)
+				err = mode_add.AddConstrainedDelegationWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo, debug)
 				if err != nil {
 					logger.Warn(fmt.Sprintf("Error adding constrained delegation with protocol transition: %s\n", err))
 				}
 			} else {
 				if removeProtocolTransition {
-					err = mode_remove.RemoveProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName)
+					err = mode_remove.RemoveProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 					if err != nil {
 						logger.Warn(fmt.Sprintf("Error removing protocol transition: %s\n", err))
 					}
 				}
-				err = mode_add.AddConstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo)
+				err = mode_add.AddConstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo, debug)
 				if err != nil {
 					logger.Warn(fmt.Sprintf("Error adding constrained delegation: %s\n", err))
 				}
 			}
 		} else if delegationType == "unconstrained" {
-			err = mode_add.AddUnconstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName)
+			err = mode_add.AddUnconstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 			if err != nil {
 				logger.Warn(fmt.Sprintf("Error adding unconstrained delegation: %s\n", err))
 			}
 		} else if delegationType == "rbcd" {
-			err = mode_add.AddRessourceBasedConstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo)
+			err = mode_add.AddRessourceBasedConstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo, debug)
 			if err != nil {
 				logger.Warn(fmt.Sprintf("Error adding ressource-based constrained delegation: %s\n", err))
 			}
-		} else if delegationType == "protocol-transition" {
-			err = mode_add.AddProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName)
+		} else if delegationType == "protocoltransition" {
+			err = mode_add.AddProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 			if err != nil {
 				logger.Warn(fmt.Sprintf("Error adding protocol transition: %s\n", err))
 			}
 		}
 
 	} else if mode == "audit" {
-		err = mode_audit.AuditUnconstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+		err = mode_audit.AuditUnconstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Error auditing unconstrained delegations: %s\n", err))
 		}
-		err = mode_audit.AuditConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+		err = mode_audit.AuditConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Error auditing constrained delegations: %s\n", err))
 		}
-		err = mode_audit.AuditConstrainedDelegationsWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos)
+		err = mode_audit.AuditConstrainedDelegationsWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Error auditing constrained delegations with protocol transition: %s\n", err))
 		}
-		err = mode_audit.AuditRessourceBasedConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+		err = mode_audit.AuditRessourceBasedConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Error auditing ressource-based constrained delegations: %s\n", err))
 		}
@@ -459,23 +553,23 @@ func main() {
 	} else if mode == "find" {
 		if delegationType == "constrained" {
 			if withProtocolTransition {
-				err = mode_find.FindConstrainedDelegationsWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos)
+				err = mode_find.FindConstrainedDelegationsWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
 				if err != nil {
 					logger.Warn(fmt.Sprintf("Error finding constrained delegations with protocol transition: %s\n", err))
 				}
 			} else {
-				err = mode_find.FindConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+				err = mode_find.FindConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
 				if err != nil {
 					logger.Warn(fmt.Sprintf("Error finding constrained delegations: %s\n", err))
 				}
 			}
 		} else if delegationType == "unconstrained" {
-			err = mode_find.FindUnconstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+			err = mode_find.FindUnconstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
 			if err != nil {
 				logger.Warn(fmt.Sprintf("Error finding unconstrained delegations: %s\n", err))
 			}
 		} else if delegationType == "rbcd" {
-			err = mode_find.FindRessourceBasedConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+			err = mode_find.FindRessourceBasedConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
 			if err != nil {
 				logger.Warn(fmt.Sprintf("Error finding ressource-based constrained delegations: %s\n", err))
 			}
@@ -484,41 +578,47 @@ func main() {
 	} else if mode == "remove" {
 		if delegationType == "constrained" {
 			if withProtocolTransition {
-				err = mode_remove.RemoveConstrainedDelegationWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo)
+				err = mode_remove.RemoveConstrainedDelegationWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo, debug)
 				if err != nil {
 					logger.Warn(fmt.Sprintf("Error removing constrained delegation with protocol transition: %s\n", err))
 				}
 			} else {
 				if removeProtocolTransition {
-					err = mode_remove.RemoveProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName)
+					err = mode_remove.RemoveProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 					if err != nil {
 						logger.Warn(fmt.Sprintf("Error removing protocol transition: %s\n", err))
 					}
 				}
-				err = mode_remove.RemoveConstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo)
+				err = mode_remove.RemoveConstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo, debug)
 				if err != nil {
 					logger.Warn(fmt.Sprintf("Error removing constrained delegation: %s\n", err))
 				}
 			}
 		} else if delegationType == "unconstrained" {
-			err = mode_remove.RemoveUnconstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName)
+			err = mode_remove.RemoveUnconstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 			if err != nil {
 				logger.Warn(fmt.Sprintf("Error removing unconstrained delegation: %s\n", err))
 			}
 		} else if delegationType == "rbcd" {
-			err = mode_remove.RemoveRessourceBasedConstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo)
+			err = mode_remove.RemoveRessourceBasedConstrainedDelegation(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, allowedToDelegateTo, debug)
 			if err != nil {
 				logger.Warn(fmt.Sprintf("Error removing ressource-based constrained delegation: %s\n", err))
 			}
-		} else if delegationType == "protocol-transition" {
-			err = mode_remove.RemoveProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName)
+		} else if delegationType == "protocoltransition" {
+			err = mode_remove.RemoveProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 			if err != nil {
 				logger.Warn(fmt.Sprintf("Error removing protocol transition: %s\n", err))
 			}
 		}
 
 	} else if mode == "monitor" {
-		mode_monitor.MonitorDelegations(domainController, ldapPort, creds, useLdaps, useKerberos)
+		err = mode_monitor.MonitorDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
+		if err != nil {
+			logger.Warn(fmt.Sprintf("Error monitoring delegations: %s\n", err))
+		}
+
+	} else {
+		logger.Warn(fmt.Sprintf("Invalid mode '%s'.", mode))
 	}
 
 	logger.Print("Done.")

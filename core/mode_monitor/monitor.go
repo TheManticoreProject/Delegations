@@ -5,10 +5,13 @@ import (
 	"slices"
 	"strconv"
 
+	"github.com/TheManticoreProject/Delegations/core/utils"
 	"github.com/TheManticoreProject/Manticore/logger"
 	"github.com/TheManticoreProject/Manticore/network/ldap"
 	"github.com/TheManticoreProject/Manticore/network/ldap/ldap_attributes"
 	"github.com/TheManticoreProject/Manticore/windows/credentials"
+
+	"github.com/TheManticoreProject/winacl/securitydescriptor"
 )
 
 type DelegationState struct {
@@ -130,12 +133,12 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 				flag := int(ldap_attributes.UAF_TRUSTED_FOR_DELEGATION)
 				if oldUAC&flag == 0 {
 					if newUAC&flag == flag {
-						messages = append(messages, fmt.Sprintf("  │ Unconstrained delegation has been set (flag UAF_TRUSTED_FOR_DELEGATION)\x1b[0m"))
+						messages = append(messages, "  │ Unconstrained delegation has been set (flag UAF_TRUSTED_FOR_DELEGATION)")
 					}
 				}
 				if oldUAC&flag == flag {
 					if newUAC&flag == 0 {
-						messages = append(messages, fmt.Sprintf("  │ Unconstrained delegation has been removed (flag UAF_TRUSTED_FOR_DELEGATION)\x1b[0m"))
+						messages = append(messages, "  │ Unconstrained delegation has been removed (flag UAF_TRUSTED_FOR_DELEGATION)")
 					}
 				}
 
@@ -143,12 +146,12 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 				flag = int(ldap_attributes.UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)
 				if oldUAC&flag == 0 {
 					if newUAC&flag == flag {
-						messages = append(messages, fmt.Sprintf("  │ Constrained delegation with protocol transition has been set (flag UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)\x1b[0m"))
+						messages = append(messages, "  │ Constrained delegation with protocol transition has been set (flag UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)")
 					}
 				}
 				if oldUAC&flag == flag {
 					if newUAC&flag == 0 {
-						messages = append(messages, fmt.Sprintf("  │ Constrained delegation with protocol transition has been removed (flag UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)\x1b[0m"))
+						messages = append(messages, "  │ Constrained delegation with protocol transition has been removed (flag UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)")
 					}
 				}
 			}
@@ -172,16 +175,54 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 			resourceBasedConstrainedDelegationMessages := []string{}
 			if !slices.Equal(newDelegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity, delegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity) {
 				// Check for added values
+				valuesAdded := []string{}
 				for _, newValue := range newDelegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity {
 					if !slices.Contains(delegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity, newValue) {
-						resourceBasedConstrainedDelegationMessages = append(resourceBasedConstrainedDelegationMessages, fmt.Sprintf("  │   \x1b[1;92m+ Value added to msDS-AllowedToActOnBehalfOfOtherIdentity: %s\x1b[0m", newValue))
+						ntSecurityDescriptor := securitydescriptor.NtSecurityDescriptor{}
+						_, err := ntSecurityDescriptor.Unmarshal([]byte(newValue))
+						if err != nil {
+							return fmt.Errorf("error creating security descriptor: %s", err)
+						}
+						for _, entry := range ntSecurityDescriptor.DACL.Entries {
+							sidString := entry.SID.SID.ToString()
+							sAMAccountName, _ := utils.LookupSID(&ldapSession, sidString)
+							valuesAdded = append(valuesAdded, fmt.Sprintf("  │   │   │ \x1b[1;92m%s (%s)\x1b[0m", sidString, sAMAccountName))
+						}
 					}
 				}
+				if len(valuesAdded) > 0 {
+					if len(valuesAdded) == 1 {
+						resourceBasedConstrainedDelegationMessages = append(resourceBasedConstrainedDelegationMessages, fmt.Sprintf("  │   \x1b[1;92m+ %d value added to msDS-AllowedToActOnBehalfOfOtherIdentity:\x1b[0m", len(valuesAdded)))
+					} else {
+						resourceBasedConstrainedDelegationMessages = append(resourceBasedConstrainedDelegationMessages, fmt.Sprintf("  │   \x1b[1;92m+ %d values added to msDS-AllowedToActOnBehalfOfOtherIdentity:\x1b[0m", len(valuesAdded)))
+					}
+					resourceBasedConstrainedDelegationMessages = append(resourceBasedConstrainedDelegationMessages, valuesAdded...)
+				}
+
 				// Check for removed values
+				valuesRemoved := []string{}
 				for _, oldValue := range delegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity {
 					if !slices.Contains(newDelegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity, oldValue) {
-						resourceBasedConstrainedDelegationMessages = append(resourceBasedConstrainedDelegationMessages, fmt.Sprintf("  │   \x1b[1;91m- Value removed from msDS-AllowedToActOnBehalfOfOtherIdentity: %s\x1b[0m", oldValue))
+						ntSecurityDescriptor := securitydescriptor.NtSecurityDescriptor{}
+						_, err := ntSecurityDescriptor.Unmarshal([]byte(oldValue))
+						if err != nil {
+							return fmt.Errorf("error creating security descriptor: %s", err)
+						}
+						for _, entry := range ntSecurityDescriptor.DACL.Entries {
+							entry.Describe(0)
+							sidString := entry.SID.SID.ToString()
+							sAMAccountName, _ := utils.LookupSID(&ldapSession, sidString)
+							valuesRemoved = append(valuesRemoved, fmt.Sprintf("  │   │   │ \x1b[1;91m%s (%s)\x1b[0m", sidString, sAMAccountName))
+						}
 					}
+				}
+				if len(valuesRemoved) > 0 {
+					if len(valuesRemoved) == 1 {
+						resourceBasedConstrainedDelegationMessages = append(resourceBasedConstrainedDelegationMessages, fmt.Sprintf("  │   \x1b[1;91m- %d value removed from msDS-AllowedToActOnBehalfOfOtherIdentity:\x1b[0m", len(valuesRemoved)))
+					} else {
+						resourceBasedConstrainedDelegationMessages = append(resourceBasedConstrainedDelegationMessages, fmt.Sprintf("  │   \x1b[1;91m- %d values removed from msDS-AllowedToActOnBehalfOfOtherIdentity:\x1b[0m", len(valuesRemoved)))
+					}
+					resourceBasedConstrainedDelegationMessages = append(resourceBasedConstrainedDelegationMessages, valuesRemoved...)
 				}
 			}
 

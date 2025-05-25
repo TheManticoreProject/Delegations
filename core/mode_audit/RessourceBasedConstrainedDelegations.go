@@ -3,9 +3,11 @@ package mode_audit
 import (
 	"fmt"
 
+	"github.com/TheManticoreProject/Delegations/core/utils"
 	"github.com/TheManticoreProject/Manticore/logger"
 	"github.com/TheManticoreProject/Manticore/network/ldap"
 	"github.com/TheManticoreProject/Manticore/windows/credentials"
+	"github.com/TheManticoreProject/winacl/securitydescriptor"
 )
 
 // AuditRessourceBasedConstrainedDelegations retrieves resource-based constrained delegations for a given domain controller.
@@ -44,7 +46,7 @@ func AuditRessourceBasedConstrainedDelegations(ldapHost string, ldapPort int, cr
 	}
 
 	if len(searchResults) != 0 {
-		logger.Print(fmt.Sprintf("[>] Resource-Based Constrained Delegations (\x1b[1;93m%d\x1b[0m):", len(searchResults)))
+		logger.Print(fmt.Sprintf("[>] Resource-Based Constrained Delegations (\x1b[93m%d\x1b[0m):", len(searchResults)))
 		for entryIndex, entry := range searchResults {
 			if entryIndex < len(searchResults)-1 {
 				logger.Print(fmt.Sprintf("  ├── \x1b[94m%s\x1b[0m", entry.DN))
@@ -58,18 +60,37 @@ func AuditRessourceBasedConstrainedDelegations(ldapHost string, ldapPort int, cr
 			} else {
 				logger.Print(fmt.Sprintf("      └── msDS-AllowedToActOnBehalfOfOtherIdentity (%d):", len(values)))
 			}
+
 			for valueIndex, value := range values {
-				if entryIndex < len(searchResults)-1 {
-					if valueIndex < len(values)-1 {
-						logger.Print(fmt.Sprintf("  │       ├── \x1b[94m%s\x1b[0m", value))
-					} else {
-						logger.Print(fmt.Sprintf("  │       └── \x1b[94m%s\x1b[0m", value))
-					}
+				var separator string
+				if valueIndex < len(values)-1 {
+					separator = "├──"
 				} else {
-					if valueIndex < len(values)-1 {
-						logger.Print(fmt.Sprintf("          ├── \x1b[94m%s\x1b[0m", value))
+					separator = "└──"
+				}
+
+				ntSecurityDescriptor := securitydescriptor.NtSecurityDescriptor{}
+				_, err := ntSecurityDescriptor.Unmarshal([]byte(value))
+				if err != nil {
+					return fmt.Errorf("error creating security descriptor: %s", err)
+				}
+				for _, entry := range ntSecurityDescriptor.DACL.Entries {
+					sidString := entry.SID.SID.ToString()
+					distingushedName, err := utils.LookupSID(&ldapSession, sidString)
+
+					// Format the string depending on if the SID lookup failed or not
+					var formattedString string
+					if err != nil {
+						formattedString = fmt.Sprintf("%s \x1b[91m%s\x1b[0m (\x1b[91mUnknown SID\x1b[0m)", separator, sidString)
 					} else {
-						logger.Print(fmt.Sprintf("          └── \x1b[94m%s\x1b[0m", value))
+						formattedString = fmt.Sprintf("%s \x1b[92m%s\x1b[0m", separator, distingushedName)
+					}
+
+					// Print the formatted string
+					if entryIndex < len(searchResults)-1 {
+						logger.Print("  │       " + formattedString)
+					} else {
+						logger.Print("          " + formattedString)
 					}
 				}
 			}

@@ -1,9 +1,12 @@
 package mode_remove
 
 import (
+	"encoding/hex"
 	"fmt"
 	"slices"
+	"strings"
 
+	"github.com/TheManticoreProject/Delegations/core/utils"
 	"github.com/TheManticoreProject/Manticore/logger"
 	"github.com/TheManticoreProject/Manticore/network/ldap"
 	"github.com/TheManticoreProject/Manticore/windows/credentials"
@@ -41,18 +44,40 @@ func RemoveRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, cr
 	if len(searchResults) > 0 {
 		values := searchResults[0].GetEqualFoldAttributeValues("msDS-AllowedToActOnBehalfOfOtherIdentity")
 
+		binaryAllowedToActOnBehalfOfAnotherIdentity := []string{}
+
+		for _, value := range allowedToActOnBehalfOfAnotherIdentity {
+			binaryNtSecurityDescriptor, err := utils.CreateRBCDBinaryNTSecurityDescriptor(&ldapSession, value)
+			if err != nil {
+				return fmt.Errorf("error creating NTSecurityDescriptor: %s", err)
+			}
+			binaryAllowedToActOnBehalfOfAnotherIdentity = append(binaryAllowedToActOnBehalfOfAnotherIdentity, string(binaryNtSecurityDescriptor))
+		}
+
 		newValues := []string{}
 		for _, existingValue := range values {
-			if !slices.Contains(allowedToActOnBehalfOfAnotherIdentity, existingValue) {
+			if !slices.Contains(binaryAllowedToActOnBehalfOfAnotherIdentity, existingValue) {
 				newValues = append(newValues, existingValue)
 			} else {
 				logger.Info(fmt.Sprintf("Removing %s from msDS-AllowedToActOnBehalfOfOtherIdentity", existingValue))
 			}
 		}
 
-		err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity", newValues)
-		if err != nil {
-			return fmt.Errorf("error removing constrained delegation of %s from %s: %s", distinguishedName, allowedToActOnBehalfOfAnotherIdentity, err)
+		if debug {
+			hexValues := []string{}
+			for _, value := range values {
+				hexValues = append(hexValues, hex.EncodeToString([]byte(value)))
+			}
+			logger.Info(fmt.Sprintf("Updated msDS-AllowedToActOnBehalfOfOtherIdentity values: [%s]", strings.Join(hexValues, ", ")))
+		}
+
+		if len(newValues) > 0 {
+			err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity", newValues)
+			if err != nil {
+				return fmt.Errorf("error removing constrained delegation of %s from %s: %s", distinguishedName, allowedToActOnBehalfOfAnotherIdentity, err)
+			}
+		} else {
+			logger.Info(fmt.Sprintf("No constrained delegation to remove for %s", distinguishedName))
 		}
 
 		logger.Info(fmt.Sprintf("Constrained delegation removed for %s", distinguishedName))

@@ -1,9 +1,12 @@
 package mode_add
 
 import (
+	"encoding/hex"
 	"fmt"
 	"slices"
+	"strings"
 
+	"github.com/TheManticoreProject/Delegations/core/utils"
 	"github.com/TheManticoreProject/Manticore/logger"
 	"github.com/TheManticoreProject/Manticore/network/ldap"
 	"github.com/TheManticoreProject/Manticore/windows/credentials"
@@ -41,23 +44,34 @@ func AddRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, creds
 	if len(searchResults) > 0 {
 		values := searchResults[0].GetEqualFoldAttributeValues("msDS-AllowedToActOnBehalfOfOtherIdentity")
 		for _, value := range allowedToActOnBehalfOfAnotherIdentity {
-			if !slices.Contains(values, value) {
-				values = append(values, value)
+			binaryNtSecurityDescriptor, err := utils.CreateRBCDBinaryNTSecurityDescriptor(&ldapSession, value)
+			if err != nil {
+				return fmt.Errorf("error creating NTSecurityDescriptor: %s", err)
+			}
+			if !slices.Contains(values, string(binaryNtSecurityDescriptor)) {
+				values = append(values, string(binaryNtSecurityDescriptor))
 			} else {
 				logger.Info(fmt.Sprintf("Value %s is already present in msDS-AllowedToActOnBehalfOfOtherIdentity, not adding it again", value))
 			}
 		}
 
 		if debug {
-			logger.Info(fmt.Sprintf("Updated msDS-AllowedToActOnBehalfOfOtherIdentity values: %v", values))
+			hexValues := []string{}
+			for _, value := range values {
+				hexValues = append(hexValues, hex.EncodeToString([]byte(value)))
+			}
+			logger.Info(fmt.Sprintf("Updated msDS-AllowedToActOnBehalfOfOtherIdentity values: [%s]", strings.Join(hexValues, ", ")))
 		}
 
-		err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity", values)
-		if err != nil {
-			return fmt.Errorf("error adding constrained delegation of %s to %s: %s", distinguishedName, allowedToActOnBehalfOfAnotherIdentity, err)
+		if len(values) > 0 {
+			err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity", values)
+			if err != nil {
+				return fmt.Errorf("error adding ressource-based constrained delegation of %s to %s: %s", distinguishedName, allowedToActOnBehalfOfAnotherIdentity, err)
+			}
+			logger.Info(fmt.Sprintf("Ressource-based constrained delegation added for %s", distinguishedName))
+		} else {
+			logger.Info(fmt.Sprintf("No ressource-based constrained delegation added for %s", distinguishedName))
 		}
-
-		logger.Info(fmt.Sprintf("Constrained delegation added for %s", distinguishedName))
 
 	} else {
 		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)

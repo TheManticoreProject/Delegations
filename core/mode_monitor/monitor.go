@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"slices"
 	"strconv"
-	"time"
 
 	"github.com/TheManticoreProject/Manticore/logger"
 	"github.com/TheManticoreProject/Manticore/network/ldap"
@@ -213,7 +212,5 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 		delegationMap = newDelegationMap
 
 		ldapSession.Close()
-
-		time.Sleep(1 * time.Second)
 	}
 }

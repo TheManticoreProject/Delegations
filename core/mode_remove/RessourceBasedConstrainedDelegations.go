@@ -74,13 +74,13 @@ func RemoveRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, cr
 		if len(newValues) > 0 {
 			err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity", newValues)
 			if err != nil {
-				return fmt.Errorf("error removing constrained delegation of %s from %s: %s", distinguishedName, allowedToActOnBehalfOfAnotherIdentity, err)
+				return fmt.Errorf("error removing ressource based constrained delegation of %s from %s: %s", distinguishedName, allowedToActOnBehalfOfAnotherIdentity, err)
 			}
 		} else {
-			logger.Info(fmt.Sprintf("No constrained delegation to remove for %s", distinguishedName))
+			logger.Info(fmt.Sprintf("No ressource based constrained delegation to remove for %s", distinguishedName))
 		}
 
-		logger.Info(fmt.Sprintf("Constrained delegation removed for %s", distinguishedName))
+		logger.Info(fmt.Sprintf("Ressource based constrained delegation removed for %s", distinguishedName))
 
 	} else {
 		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)

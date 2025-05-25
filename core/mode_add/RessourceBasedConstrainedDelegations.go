@@ -58,7 +58,7 @@ func AddRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, creds
 		if debug {
 			hexValues := []string{}
 			for _, value := range values {
-				hexValues = append(hexValues, hex.EncodeToString([]byte(value)))
+				hexValues = append(hexValues, "\""+hex.EncodeToString([]byte(value))+"\"")
 			}
 			logger.Info(fmt.Sprintf("Updated msDS-AllowedToActOnBehalfOfOtherIdentity values: [%s]", strings.Join(hexValues, ", ")))
 		}

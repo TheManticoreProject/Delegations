@@ -5,6 +5,7 @@ go 1.24.0
 require (
 	github.com/TheManticoreProject/Manticore v1.0.1
 	github.com/TheManticoreProject/goopts v1.2.1
+	github.com/TheManticoreProject/winacl v1.2.8
 )
 
 require (
@@ -20,6 +21,6 @@ require (
 	github.com/jcmturner/goidentity/v6 v6.0.1 // indirect
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/crypto v0.38.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
 )

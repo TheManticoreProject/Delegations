@@ -1,7 +1,7 @@
 ![](./.github/banner.png)
 
 <p align="center">
-      Delegations is a tool that allows you to work with unconstrained, constrained, and resource-based constrained delegations in Active Directory.
+      Delegations is a tool that allows you to work with all types of Kerberos delegations (unconstrained, constrained, and resource-based constrained delegations) in Active Directory.
       <br>
       <a href="https://github.com/TheManticoreProject/Delegations/actions/workflows/release.yaml" title="Build"><img alt="Build and Release" src="https://github.com/TheManticoreProject/Delegations/actions/workflows/release.yaml/badge.svg"></a>
       <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/TheManticoreProject/Delegations">
@@ -29,9 +29,86 @@
   - [x] Remove existing unconstrained delegations
   - [x] Remove existing constrained delegations with or without protocol transition
   - [x] Remove existing resource-based constrained delegations
+- [x] Protocol transition mode:
+  - [x] Add protocol transition on a constrained delegation
+  - [x] Remove protocol transition on a constrained delegation
 
 ## Demonstration
 
+<details open>
+<summary><b>Audit Mode</b></summary>
+
+The audit mode allows you to scan your Active Directory environment for all types of delegations:
+
+```
+$ ./Delegations audit --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+
+<img src="./.github/examples/audit.png" alt="Demonstration of Audit Mode" width="100%">
+
+</details>
+
+
+<details>
+<summary><b>Add Mode</b></summary>
+
+The add mode allows you to add a constrained, unconstrained, or resource-based constrained delegation from a user or group:
+
+```
+$ ./Delegations add constrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+
+
+
+```
+$ ./Delegations add unconstrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+
+
+
+```
+$ ./Delegations add rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+</details>
+
+
+<details>
+<summary><b>Remove Mode</b></summary>
+
+The remove mode allows you to remove a constrained, unconstrained, or resource-based constrained delegation from a user or group:
+
+```
+$ ./Delegations remove constrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+
+
+
+```
+$ ./Delegations remove unconstrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+
+
+
+```
+$ ./Delegations remove rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+</details>
+
+
+<details>
+<summary><b>Protocol Transition Mode</b></summary>
+
+The protocol transition mode allows you to add a protocol transition delegation to a user or group:
+
+```
+$ ./Delegations add protocoltransition --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+
+```
+$ ./Delegations remove protocoltransition --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+
+</details>
 
 
 ## Usage
@@ -39,16 +116,16 @@
 The first positional argument of the program is the mode:
 
 ```
-$ ./Delegations
+$ ./Delegations 
 Delegations - by Remi GASCOU (Podalirius) @ TheManticoreProject - v1.0.0
 
-Usage: Delegations <add|audit|find|remove>
+Usage: Delegations <add|audit|find|monitor|remove>
 
-   add     Add a constrained, unconstrained, or resource-based constrained delegation to a user or group.
-   audit   Audit constrained, unconstrained, and resource-based constrained delegations in Active Directory.
-   find    Find a constrained, unconstrained, or resource-based constrained delegation from a user or group.
-   remove  Remove a constrained, unconstrained, or resource-based constrained delegation from a user or group.
-
+   remove   Remove a constrained, unconstrained, or resource-based constrained delegation from a user or group.
+   add      Add a constrained, unconstrained, or resource-based constrained delegation to a user or group.
+   audit    Audit constrained, unconstrained, and resource-based constrained delegations in Active Directory.
+   find     Find a constrained, unconstrained, or resource-based constrained delegation from a user or group.
+   monitor  Monitor constrained, unconstrained, and resource-based constrained delegations in Active Directory.
 ```
 
 Then for modes `add`, `remove` and `find`, the second positional argument is the delegation type:
@@ -88,7 +165,6 @@ Usage: Delegations audit --domain <string> --username <string> [--password <stri
     -lp, --ldap-port <tcp port> Port number to connect to LDAP server. (default: 389)
     -L, --use-ldaps             Use LDAPS instead of LDAP. (default: false)
     -k, --use-kerberos          Use Kerberos instead of NTLM. (default: false)
-
 ```
 
 ## Contributing

@@ -4,8 +4,8 @@ github.com/TheManticoreProject/Manticore v1.0.1 h1:b4MFQyiDrnADDFfu0bwAoVmgMEegd
 github.com/TheManticoreProject/Manticore v1.0.1/go.mod h1:2YzwHihKSODuo1YP0UuHL/AgcwkQLtc5j/ihuvke4/k=
 github.com/TheManticoreProject/goopts v1.2.1 h1:/VhIRpQNEvbo01Yi6WHK6KG9SyNVi2yb6AIsOviqJ3Q=
 github.com/TheManticoreProject/goopts v1.2.1/go.mod h1:NaM3hXXCeN+x9ZSlkS6Bm8i8Lfqe28/rveBsfrMUrAo=
-github.com/TheManticoreProject/winacl v1.2.8 h1:wZk7E7+lr6C18vMDWe4fIGz+HygvFu8/al7tyMQAs34=
-github.com/TheManticoreProject/winacl v1.2.8/go.mod h1:Xji/qLzY8AkdBNXRgOS7g+UBEuqMQBBZllr+rl7Hzko=
+github.com/TheManticoreProject/winacl v1.2.10 h1:QOqSq/zU84V44cK2GbLo1a3vbIOcJcPKFCVIAnM+ckw=
+github.com/TheManticoreProject/winacl v1.2.10/go.mod h1:Xji/qLzY8AkdBNXRgOS7g+UBEuqMQBBZllr+rl7Hzko=
 github.com/alexbrainman/sspi v0.0.0-20231016080023-1a75b4708caa h1:LHTHcTQiSGT7VVbI0o4wBRNQIgn917usHWOd6VAffYI=
 github.com/alexbrainman/sspi v0.0.0-20231016080023-1a75b4708caa/go.mod h1:cEWa1LVoE5KvSD9ONXsZrj0z6KqySlCCNKHlLzbqAt4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

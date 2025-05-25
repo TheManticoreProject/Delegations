@@ -52,61 +52,70 @@ $ ./Delegations audit --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator
 <details>
 <summary><b>Add Mode</b></summary>
 
-The add mode allows you to add a constrained, unconstrained, or resource-based constrained delegation from a user or group:
+The add mode allows you to add a constrained, unconstrained, or resource-based constrained delegation on an object:
 
 ```
 $ ./Delegations add constrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
 ```
 
+<img src="./.github/examples/add.png" alt="Demonstration of Add Mode" width="100%">
 
 
 ```
 $ ./Delegations add unconstrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
 ```
 
-
+<img src="./.github/examples/add_unconstrained.png" alt="Demonstration of Add Mode" width="100%">
 
 ```
 $ ./Delegations add rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
 ```
+
+<img src="./.github/examples/add_rbcd.png" alt="Demonstration of Add Mode" width="100%">
 </details>
 
 
 <details>
 <summary><b>Remove Mode</b></summary>
 
-The remove mode allows you to remove a constrained, unconstrained, or resource-based constrained delegation from a user or group:
+The remove mode allows you to remove a constrained, unconstrained, or resource-based constrained delegation from an object:
 
 ```
 $ ./Delegations remove constrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
 ```
 
-
+<img src="./.github/examples/remove.png" alt="Demonstration of Remove Mode" width="100%">
 
 ```
 $ ./Delegations remove unconstrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
 ```
 
-
+<img src="./.github/examples/remove_unconstrained.png" alt="Demonstration of Remove Mode" width="100%">
 
 ```
 $ ./Delegations remove rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
 ```
+
+<img src="./.github/examples/remove_rbcd.png" alt="Demonstration of Remove Mode" width="100%">
 </details>
 
 
 <details>
 <summary><b>Protocol Transition Mode</b></summary>
 
-The protocol transition mode allows you to add a protocol transition delegation to a user or group:
+The protocol transition mode allows you to add a protocol transition delegation to an object:
 
 ```
 $ ./Delegations add protocoltransition --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
 ```
 
+<img src="./.github/examples/add_protocol_transition.png" alt="Demonstration of Protocol Transition Mode" width="100%">
+
 ```
 $ ./Delegations remove protocoltransition --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
 ```
+
+<img src="./.github/examples/remove_protocol_transition.png" alt="Demonstration of Protocol Transition Mode" width="100%">
 
 </details>
 

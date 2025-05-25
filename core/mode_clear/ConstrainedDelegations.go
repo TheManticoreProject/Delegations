@@ -1,4 +1,4 @@
-package mode_remove
+package mode_clear
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/TheManticoreProject/Manticore/windows/credentials"
 )
 
-// RemoveConstrainedDelegationWithProtocolTransition removes a constrained delegation with protocol transition from a user or computer account.
+// ClearConstrainedDelegation clears a constrained delegation from a user or computer account.
 //
 //	Parameters:
 //		ldapHost (string): The LDAP host to connect to.
@@ -17,13 +17,13 @@ import (
 //		creds (*credentials.Credentials): The credentials to use for the LDAP connection.
 //		useLdaps (bool): Whether to use LDAPS for the LDAP connection.
 //		useKerberos (bool): Whether to use Kerberos for the LDAP connection.
-//		distinguishedName (string): The distinguished name of the user or computer account to remove the constrained delegation from.
+//		distinguishedName (string): The distinguished name of the user or computer account to clear the constrained delegation from.
 //		allowedToDelegateTo ([]string): The list of users or computers that the account is allowed to delegate to.
 //		debug (bool): A flag indicating whether to print debug information.
 //
 //	Returns:
 //		error: An error if the operation fails, nil otherwise.
-func RemoveConstrainedDelegationWithProtocolTransition(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, allowedToDelegateTo []string, debug bool) error {
+func ClearConstrainedDelegation(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, debug bool) error {
 	ldapSession := ldap.Session{}
 	ldapSession.InitSession(ldapHost, ldapPort, creds, useLdaps, useKerberos)
 	success, err := ldapSession.Connect()
@@ -39,7 +39,7 @@ func RemoveConstrainedDelegationWithProtocolTransition(ldapHost string, ldapPort
 	query += ")"
 	query += "(&"
 	query += fmt.Sprintf("(distinguishedName=%s)", distinguishedName)
-	query += fmt.Sprintf("(userAccountControl:1.2.840.113556.1.4.803:=%d)", ldap_attributes.UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)
+	query += fmt.Sprintf("(!(userAccountControl:1.2.840.113556.1.4.803:=%d))", ldap_attributes.UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)
 	query += ")"
 	query += ")"
 	searchResults, err := ldapSession.QueryWholeSubtree("", query, []string{"msDS-AllowedToDelegateTo"})
@@ -53,42 +53,14 @@ func RemoveConstrainedDelegationWithProtocolTransition(ldapHost string, ldapPort
 		if len(values) == 0 {
 			logger.Info(fmt.Sprintf("No msDS-AllowedToDelegateTo exists for %s", distinguishedName))
 			return nil
-		}
-
-		newValues := []string{}
-		for _, existingValue := range values {
-			shouldKeep := true
-			for _, valueToRemove := range allowedToDelegateTo {
-				if existingValue == valueToRemove {
-					logger.Info(fmt.Sprintf("Removing %s from msDS-AllowedToDelegateTo", existingValue))
-					shouldKeep = false
-					break
-				}
-			}
-			if shouldKeep {
-				newValues = append(newValues, existingValue)
-			}
-		}
-
-		if debug {
-			logger.Debug(fmt.Sprintf("New msDS-AllowedToDelegateTo values: %v", newValues))
-		}
-
-		if len(newValues) == 0 {
-			logger.Info(fmt.Sprintf("No msDS-AllowedToDelegateTo values left for %s", distinguishedName))
-
+		} else {
 			err = ldapSession.FlushAttribute(distinguishedName, "msDS-AllowedToDelegateTo")
 			if err != nil {
-				return fmt.Errorf("error flushing msDS-AllowedToDelegateTo: %s", err)
-			}
-		} else {
-			err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToDelegateTo", newValues)
-			if err != nil {
-				return fmt.Errorf("error removing constrained delegation with protocol transition of %s from %s: %s", distinguishedName, allowedToDelegateTo, err)
+				return fmt.Errorf("error clearing msDS-AllowedToDelegateTo: %s", err)
 			}
 		}
 
-		logger.Info(fmt.Sprintf("Constrained delegation with protocol transition removed for %s", distinguishedName))
+		logger.Info(fmt.Sprintf("Constrained delegation cleared for %s", distinguishedName))
 
 	} else {
 		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)

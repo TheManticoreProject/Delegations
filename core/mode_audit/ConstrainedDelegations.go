@@ -46,7 +46,7 @@ func AuditConstrainedDelegations(ldapHost string, ldapPort int, creds *credentia
 	}
 
 	if len(searchResults) != 0 {
-		logger.Print(fmt.Sprintf("[>] Constrained Delegations (\x1b[1;93m%d\x1b[0m):", len(searchResults)))
+		logger.Print(fmt.Sprintf("[>] Constrained Delegations (\x1b[93m%d\x1b[0m):", len(searchResults)))
 		for entryIndex, entry := range searchResults {
 			if entryIndex < len(searchResults)-1 {
 				logger.Print(fmt.Sprintf("  ├── \x1b[94m%s\x1b[0m", entry.DN))

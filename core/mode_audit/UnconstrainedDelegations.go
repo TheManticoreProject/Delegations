@@ -46,7 +46,7 @@ func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credent
 	}
 
 	if len(searchResults) != 0 {
-		logger.Print(fmt.Sprintf("[>] Unconstrained Delegations (\x1b[1;93m%d\x1b[0m):", len(searchResults)))
+		logger.Print(fmt.Sprintf("[>] Unconstrained Delegations (\x1b[93m%d\x1b[0m):", len(searchResults)))
 		for k, entry := range searchResults {
 			userAccountControl, err := strconv.Atoi(entry.GetAttributeValue("userAccountControl"))
 			if err != nil {
@@ -56,11 +56,11 @@ func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credent
 
 			auditString := ""
 			if userAccountControl&int(ldap_attributes.UAF_SERVER_TRUST_ACCOUNT) == int(ldap_attributes.UAF_SERVER_TRUST_ACCOUNT) {
-				auditString = "(\x1b[1;92mLegitimate\x1b[0m: DC)"
+				auditString = "(\x1b[92mLegitimate\x1b[0m: DC)"
 			} else if userAccountControl&int(ldap_attributes.UAF_PARTIAL_SECRETS_ACCOUNT) == int(ldap_attributes.UAF_SERVER_TRUST_ACCOUNT) {
-				auditString = "(\x1b[1;91mSuspicious\x1b[0m: RODCs do not have unconstrained delegation by default)"
+				auditString = "(\x1b[91mSuspicious\x1b[0m: RODCs do not have unconstrained delegation by default)"
 			} else {
-				auditString = "(\x1b[1;91mSuspicious\x1b[0m)"
+				auditString = "(\x1b[91mSuspicious\x1b[0m)"
 			}
 
 			// Print the audit string

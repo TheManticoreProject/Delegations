@@ -44,8 +44,8 @@ func RemoveRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, cr
 	if len(searchResults) > 0 {
 		values := searchResults[0].GetEqualFoldAttributeValues("msDS-AllowedToActOnBehalfOfOtherIdentity")
 
+		// Convert the user specified identities to binary NTSecurityDescriptor
 		binaryAllowedToActOnBehalfOfAnotherIdentity := []string{}
-
 		for _, value := range allowedToActOnBehalfOfAnotherIdentity {
 			binaryNtSecurityDescriptor, err := utils.CreateRBCDBinaryNTSecurityDescriptor(&ldapSession, value)
 			if err != nil {
@@ -54,24 +54,35 @@ func RemoveRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, cr
 			binaryAllowedToActOnBehalfOfAnotherIdentity = append(binaryAllowedToActOnBehalfOfAnotherIdentity, string(binaryNtSecurityDescriptor))
 		}
 
+		// Remove the user specified identities from the existing values of the attribute
+		// and print debug information if enabled
 		newValues := []string{}
 		for _, existingValue := range values {
 			if !slices.Contains(binaryAllowedToActOnBehalfOfAnotherIdentity, existingValue) {
 				newValues = append(newValues, existingValue)
+				logger.Info(fmt.Sprintf("Keeping %s in msDS-AllowedToActOnBehalfOfOtherIdentity", hex.EncodeToString([]byte(existingValue))))
 			} else {
-				logger.Info(fmt.Sprintf("Removing %s from msDS-AllowedToActOnBehalfOfOtherIdentity", existingValue))
+				logger.Info(fmt.Sprintf("Removing %s from msDS-AllowedToActOnBehalfOfOtherIdentity", hex.EncodeToString([]byte(existingValue))))
 			}
 		}
 
 		if debug {
 			hexValues := []string{}
-			for _, value := range values {
-				hexValues = append(hexValues, hex.EncodeToString([]byte(value)))
+			for _, value := range newValues {
+				hexValues = append(hexValues, "\""+hex.EncodeToString([]byte(value))+"\"")
 			}
 			logger.Info(fmt.Sprintf("Updated msDS-AllowedToActOnBehalfOfOtherIdentity values: [%s]", strings.Join(hexValues, ", ")))
 		}
 
-		if len(newValues) > 0 {
+		// Overwrite the attribute with the new values
+		if len(newValues) == 0 {
+			logger.Info(fmt.Sprintf("No msDS-AllowedToActOnBehalfOfOtherIdentity values left for %s", distinguishedName))
+
+			err = ldapSession.FlushAttribute(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity")
+			if err != nil {
+				return fmt.Errorf("error flushing msDS-AllowedToActOnBehalfOfOtherIdentity: %s", err)
+			}
+		} else if len(newValues) > 0 {
 			err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity", newValues)
 			if err != nil {
 				return fmt.Errorf("error removing ressource based constrained delegation of %s from %s: %s", distinguishedName, allowedToActOnBehalfOfAnotherIdentity, err)

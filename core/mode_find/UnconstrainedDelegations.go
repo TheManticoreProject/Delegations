@@ -45,7 +45,7 @@ func FindUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credenti
 	}
 
 	if len(searchResults) != 0 {
-		logger.Print(fmt.Sprintf("[>] Unconstrained Delegations (\x1b[1;93m%d\x1b[0m):", len(searchResults)))
+		logger.Print(fmt.Sprintf("[>] Unconstrained Delegations (\x1b[93m%d\x1b[0m):", len(searchResults)))
 		for k, entry := range searchResults {
 			if k < len(searchResults)-1 {
 				logger.Print(fmt.Sprintf("  ├── \x1b[94m%s\x1b[0m", entry.DN))

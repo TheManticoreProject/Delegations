@@ -184,7 +184,7 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 							return fmt.Errorf("error creating security descriptor: %s", err)
 						}
 						for _, entry := range ntSecurityDescriptor.DACL.Entries {
-							sidString := entry.SID.SID.ToString()
+							sidString := entry.Identity.SID.ToString()
 							sAMAccountName, _ := utils.LookupSID(&ldapSession, sidString)
 							valuesAdded = append(valuesAdded, fmt.Sprintf("  │   │   │ \x1b[1;92m%s (%s)\x1b[0m", sidString, sAMAccountName))
 						}
@@ -209,7 +209,7 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 							return fmt.Errorf("error creating security descriptor: %s", err)
 						}
 						for _, entry := range ntSecurityDescriptor.DACL.Entries {
-							sidString := entry.SID.SID.ToString()
+							sidString := entry.Identity.SID.ToString()
 							sAMAccountName, _ := utils.LookupSID(&ldapSession, sidString)
 							valuesRemoved = append(valuesRemoved, fmt.Sprintf("  │   │   │ \x1b[1;91m%s (%s)\x1b[0m", sidString, sAMAccountName))
 						}

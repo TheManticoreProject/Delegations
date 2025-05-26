@@ -1,16 +1,21 @@
 package utils
 
 import (
+	"encoding/hex"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 
+	"github.com/TheManticoreProject/Manticore/logger"
 	"github.com/TheManticoreProject/Manticore/network/ldap"
 	"github.com/TheManticoreProject/winacl/ace"
-	"github.com/TheManticoreProject/winacl/acl"
-	"github.com/TheManticoreProject/winacl/identity"
+	"github.com/TheManticoreProject/winacl/ace/acetype"
+	"github.com/TheManticoreProject/winacl/acl/revision"
 	ace_rights "github.com/TheManticoreProject/winacl/rights"
 	"github.com/TheManticoreProject/winacl/securitydescriptor"
+	"github.com/TheManticoreProject/winacl/securitydescriptor/control"
+	"github.com/TheManticoreProject/winacl/sid"
 )
 
 // DNExists checks if a distinguished name exists in LDAP
@@ -63,7 +68,7 @@ func LookupSID(ldapSession *ldap.Session, sid string) (string, error) {
 	}
 
 	if len(searchResults) == 0 {
-		return "?", nil
+		return "?", fmt.Errorf("no object found with SID %s", sid)
 	}
 
 	if len(searchResults) > 1 {
@@ -75,13 +80,13 @@ func LookupSID(ldapSession *ldap.Session, sid string) (string, error) {
 
 // SIDFromValue looks up a value in LDAP and returns the corresponding SID
 // Returns the SID and nil if found, empty string and error otherwise
-func SIDFromValue(ldapSession *ldap.Session, value string) (*identity.SID, error) {
+func SIDFromValue(ldapSession *ldap.Session, value string) (*sid.SID, error) {
 	if value == "" {
 		return nil, fmt.Errorf("value cannot be empty")
 	}
 	value = strings.TrimSpace(value)
 
-	sid := identity.SID{}
+	sid := sid.SID{}
 
 	// Check if the value is already a SID string
 	if strings.HasPrefix(strings.ToUpper(value), "S-") {
@@ -135,27 +140,96 @@ func SIDFromValue(ldapSession *ldap.Session, value string) (*identity.SID, error
 	return nil, fmt.Errorf("invalid SID format")
 }
 
-// CreateRBCDBinaryNTSecurityDescriptor creates a new NTSecurityDescriptor for a given SID
-// Returns the NTSecurityDescriptor and nil if successful, nil and error otherwise
-func CreateRBCDBinaryNTSecurityDescriptor(ldapSession *ldap.Session, value string) ([]byte, error) {
-	sid, err := SIDFromValue(ldapSession, value)
-	if err != nil {
-		return nil, fmt.Errorf("error getting SID from value: %s", err)
+// UpdateNTSecurityDescriptorDACL updates an existing NTSecurityDescriptor with a new SID
+// Returns the updated NTSecurityDescriptor and nil if successful, nil and error otherwise
+func UpdateNTSecurityDescriptorDACL(ldapSession *ldap.Session, rawNTSecurityDescriptor []byte, addValues []string, removeValues []string, debug bool) ([]byte, error) {
+	var ntsd securitydescriptor.NtSecurityDescriptor
+
+	if len(rawNTSecurityDescriptor) == 0 {
+		// Create a new NTSecurityDescriptor
+		ntsd.Header.Revision = 1
+		ntsd.Header.Control.AddControl(control.NT_SECURITY_DESCRIPTOR_CONTROL_PS)
+		ntsd.Header.Control.AddControl(control.NT_SECURITY_DESCRIPTOR_CONTROL_OD)
+
+		ntsd.Owner.SID.FromString("S-1-5-32-544")
+
+		// The group need to not be set
+
+		ntsd.DACL.Header.Revision.SetRevision(revision.ACL_REVISION_DS)
+	} else {
+		// Unmarshal the existing NTSecurityDescriptor
+		_, err := ntsd.Unmarshal(rawNTSecurityDescriptor)
+		if err != nil {
+			return nil, fmt.Errorf("error unmarshalling NTSecurityDescriptor: %s", err)
+		}
 	}
 
-	ntsd := securitydescriptor.NtSecurityDescriptor{}
-	ntsd.Header.Revision = 1
-	ntsd.Header.Control.AddControl(securitydescriptor.NT_SECURITY_DESCRIPTOR_CONTROL_PD)
-	ntsd.Header.Control.AddControl(securitydescriptor.NT_SECURITY_DESCRIPTOR_CONTROL_OD)
+	// Add the new values in ACEs to the NTSecurityDescriptor
+	for index, value := range addValues {
+		sid, err := SIDFromValue(ldapSession, value)
+		if err != nil {
+			return nil, fmt.Errorf("error getting SID from value: %s", err)
+		}
 
-	ntsd.Owner.SID.FromString("S-1-5-32-544")
-	ntsd.Group.SID.FromString("S-1-5-32-544")
+		valueAlreadyExists := false
+		for _, ace := range ntsd.DACL.Entries {
+			if ace.Identity.SID.ToString() == sid.ToString() {
+				logger.Info(fmt.Sprintf("An ACE for SID %s already exists in this NTSecurityDescriptor, not adding it again", value))
+				valueAlreadyExists = true
+				break
+			}
+		}
+		if !valueAlreadyExists {
+			ntsd.DACL.AddEntry(CreateRbcdAce(sid, index))
+		}
+	}
 
-	ntsd.DACL.Header.Revision.SetRevision(acl.ACL_REVISION_DS)
+	// Remove the values in ACEs from the NTSecurityDescriptor
+	removeSIDs := []string{}
+	for _, value := range removeValues {
+		sid, err := SIDFromValue(ldapSession, value)
+		if err != nil {
+			return nil, fmt.Errorf("error getting SID from value: %s", err)
+		}
+		removeSIDs = append(removeSIDs, sid.ToString())
+	}
 
+	keepAces := []ace.AccessControlEntry{}
+	for _, ace := range ntsd.DACL.Entries {
+		if slices.Contains(removeSIDs, ace.Identity.SID.ToString()) {
+			logger.Info(fmt.Sprintf("Removing ACE for SID %s from NTSecurityDescriptor", ace.Identity.SID.ToString()))
+		} else {
+			keepAces = append(keepAces, ace)
+		}
+	}
+	ntsd.DACL.Entries = keepAces
+
+	// Marshal the NTSecurityDescriptor
+	binaryNTSecurityDescriptor, err := ntsd.Marshal()
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling NTSecurityDescriptor: %s", err)
+	}
+	if debug {
+		logger.Info(fmt.Sprintf("NTSecurityDescriptor: %s", hex.EncodeToString(binaryNTSecurityDescriptor)))
+		ntsd.Describe(0)
+	}
+
+	// If the NTSecurityDescriptor has no ACEs, return an empty byte slice
+	if len(ntsd.DACL.Entries) == 0 {
+		return []byte{}, nil
+	}
+
+	return binaryNTSecurityDescriptor, nil
+}
+
+// CreateRbcdAce creates an ACE for Ressource-Based Constrained Delegation
+// Returns the ACE and nil if successful, nil and error otherwise
+func CreateRbcdAce(sid *sid.SID, index int) ace.AccessControlEntry {
 	a := ace.AccessControlEntry{}
-	a.Index = 0
-	a.Header.Type.Value = ace.ACE_TYPE_ACCESS_ALLOWED
+
+	a.Index = uint16(index)
+
+	a.Header.Type.Value = acetype.ACE_TYPE_ACCESS_ALLOWED
 
 	//  (DELETE|DS_CONTROL_ACCESS|DS_CREATE_CHILD|DS_DELETE_CHILD|DS_DELETE_TREE|DS_LIST_CONTENTS|DS_LIST_OBJECT|DS_READ_PROPERTY|DS_WRITE_PROPERTY|DS_WRITE_PROPERTY_EXTENDED|READ_CONTROL|WRITE_DAC|WRITE_OWNER)
 	a.Mask.SetRights([]uint32{
@@ -173,14 +247,32 @@ func CreateRBCDBinaryNTSecurityDescriptor(ldapSession *ldap.Session, value strin
 		ace_rights.RIGHT_WRITE_DAC,
 		ace_rights.RIGHT_WRITE_OWNER,
 	})
-	a.SID.SID = *sid
 
-	ntsd.DACL.AddEntry(a)
+	a.Identity.SID = *sid
 
-	binaryNTSecurityDescriptor, err := ntsd.Marshal()
+	a.Marshal()
+
+	return a
+}
+
+// SPNExists checks if a service principal name exists by querying LDAP.
+//
+// Parameters:
+//
+//	ldapSession (*ldap.Session): The LDAP session to use for querying
+//	servicePrincipalName (string): The service principal name to check
+//
+// Returns:
+//
+//	bool: True if the SPN exists, false otherwise
+//	error: An error if the operation fails, nil otherwise
+func SPNExists(ldapSession *ldap.Session, servicePrincipalName string) (bool, error) {
+	// Query LDAP for computer account matching hostname
+	searchQuery := fmt.Sprintf("(servicePrincipalName=%s)", servicePrincipalName)
+	searchResults, err := ldapSession.QueryWholeSubtree("", searchQuery, []string{})
 	if err != nil {
-		return nil, fmt.Errorf("error marshalling NTSecurityDescriptor: %s", err)
+		return false, fmt.Errorf("error querying LDAP for SPN %s: %s", servicePrincipalName, err)
 	}
 
-	return binaryNTSecurityDescriptor, nil
+	return len(searchResults) > 0, nil
 }

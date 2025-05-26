@@ -3,6 +3,7 @@ package mode_audit
 import (
 	"fmt"
 
+	"github.com/TheManticoreProject/Delegations/core/utils"
 	"github.com/TheManticoreProject/Manticore/logger"
 	"github.com/TheManticoreProject/Manticore/network/ldap"
 	"github.com/TheManticoreProject/Manticore/network/ldap/ldap_attributes"
@@ -63,18 +64,26 @@ func AuditConstrainedDelegationsWithProtocolTransition(ldapHost string, ldapPort
 				logger.Print(fmt.Sprintf("      └── msDS-AllowedToDelegateTo (%d):", len(values)))
 			}
 			for valueIndex, value := range values {
-				if entryIndex < len(searchResults)-1 {
-					if valueIndex < len(values)-1 {
-						logger.Print(fmt.Sprintf("  │       ├── \x1b[94m%s\x1b[0m", value))
-					} else {
-						logger.Print(fmt.Sprintf("  │       └── \x1b[94m%s\x1b[0m", value))
-					}
+				var separator string
+				if valueIndex < len(values)-1 {
+					separator = "├──"
 				} else {
-					if valueIndex < len(values)-1 {
-						logger.Print(fmt.Sprintf("          ├── \x1b[94m%s\x1b[0m", value))
-					} else {
-						logger.Print(fmt.Sprintf("          └── \x1b[94m%s\x1b[0m", value))
-					}
+					separator = "└──"
+				}
+
+				// Format the string depending on if the SID lookup failed or not
+				spnExists, _ := utils.SPNExists(&ldapSession, value)
+				var formattedString string
+				if spnExists {
+					formattedString = fmt.Sprintf("%s \x1b[92m%s\x1b[0m", separator, value)
+				} else {
+					formattedString = fmt.Sprintf("%s \x1b[91m%s\x1b[0m (\x1b[91mUnknown SPN\x1b[0m)", separator, value)
+				}
+
+				if entryIndex < len(searchResults)-1 {
+					logger.Print(fmt.Sprintf("  │       %s", formattedString))
+				} else {
+					logger.Print(fmt.Sprintf("          %s", formattedString))
 				}
 			}
 		}

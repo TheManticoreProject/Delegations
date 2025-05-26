@@ -75,7 +75,7 @@ func AuditRessourceBasedConstrainedDelegations(ldapHost string, ldapPort int, cr
 					return fmt.Errorf("error creating security descriptor: %s", err)
 				}
 				for _, entry := range ntSecurityDescriptor.DACL.Entries {
-					sidString := entry.SID.SID.ToString()
+					sidString := entry.Identity.SID.ToString()
 					distingushedName, err := utils.LookupSID(&ldapSession, sidString)
 
 					// Format the string depending on if the SID lookup failed or not

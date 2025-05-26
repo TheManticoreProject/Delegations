@@ -1,10 +1,9 @@
 package mode_remove
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
-	"slices"
-	"strings"
 
 	"github.com/TheManticoreProject/Delegations/core/utils"
 	"github.com/TheManticoreProject/Manticore/logger"
@@ -42,56 +41,38 @@ func RemoveRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, cr
 	}
 
 	if len(searchResults) > 0 {
-		values := searchResults[0].GetEqualFoldAttributeValues("msDS-AllowedToActOnBehalfOfOtherIdentity")
-
-		// Convert the user specified identities to binary NTSecurityDescriptor
-		binaryAllowedToActOnBehalfOfAnotherIdentity := []string{}
-		for _, value := range allowedToActOnBehalfOfAnotherIdentity {
-			binaryNtSecurityDescriptor, err := utils.CreateRBCDBinaryNTSecurityDescriptor(&ldapSession, value)
-			if err != nil {
-				return fmt.Errorf("error creating NTSecurityDescriptor: %s", err)
-			}
-			binaryAllowedToActOnBehalfOfAnotherIdentity = append(binaryAllowedToActOnBehalfOfAnotherIdentity, string(binaryNtSecurityDescriptor))
+		existingValues := searchResults[0].GetEqualFoldAttributeValues("msDS-AllowedToActOnBehalfOfOtherIdentity")
+		if len(existingValues) > 1 {
+			return fmt.Errorf("multiple msDS-AllowedToActOnBehalfOfOtherIdentity values found for %s, this should not be possible", distinguishedName)
 		}
 
-		// Remove the user specified identities from the existing values of the attribute
-		// and print debug information if enabled
-		newValues := []string{}
-		for _, existingValue := range values {
-			if !slices.Contains(binaryAllowedToActOnBehalfOfAnotherIdentity, existingValue) {
-				newValues = append(newValues, existingValue)
-				logger.Info(fmt.Sprintf("Keeping %s in msDS-AllowedToActOnBehalfOfOtherIdentity", hex.EncodeToString([]byte(existingValue))))
-			} else {
-				logger.Info(fmt.Sprintf("Removing %s from msDS-AllowedToActOnBehalfOfOtherIdentity", hex.EncodeToString([]byte(existingValue))))
-			}
+		oldRBCDNtSecurityDescriptor := []byte{}
+		if len(existingValues) != 0 {
+			oldRBCDNtSecurityDescriptor = []byte(existingValues[0])
+		}
+		binaryNtSecurityDescriptor, err := utils.UpdateNTSecurityDescriptorDACL(&ldapSession, oldRBCDNtSecurityDescriptor, []string{}, allowedToActOnBehalfOfAnotherIdentity, debug)
+		if err != nil {
+			return fmt.Errorf("error updating NTSecurityDescriptor: %s", err)
 		}
 
 		if debug {
-			hexValues := []string{}
-			for _, value := range newValues {
-				hexValues = append(hexValues, "\""+hex.EncodeToString([]byte(value))+"\"")
-			}
-			logger.Info(fmt.Sprintf("Updated msDS-AllowedToActOnBehalfOfOtherIdentity values: [%s]", strings.Join(hexValues, ", ")))
+			logger.Info(fmt.Sprintf("Updated msDS-AllowedToActOnBehalfOfOtherIdentity value: %s", hex.EncodeToString(binaryNtSecurityDescriptor)))
 		}
 
-		// Overwrite the attribute with the new values
-		if len(newValues) == 0 {
-			logger.Info(fmt.Sprintf("No msDS-AllowedToActOnBehalfOfOtherIdentity values left for %s", distinguishedName))
-
+		if !bytes.Equal(binaryNtSecurityDescriptor, oldRBCDNtSecurityDescriptor) {
 			err = ldapSession.FlushAttribute(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity")
 			if err != nil {
 				return fmt.Errorf("error flushing msDS-AllowedToActOnBehalfOfOtherIdentity: %s", err)
 			}
-		} else if len(newValues) > 0 {
-			err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity", newValues)
-			if err != nil {
-				return fmt.Errorf("error removing ressource based constrained delegation of %s from %s: %s", distinguishedName, allowedToActOnBehalfOfAnotherIdentity, err)
-			}
-		} else {
-			logger.Info(fmt.Sprintf("No ressource based constrained delegation to remove for %s", distinguishedName))
-		}
 
-		logger.Info(fmt.Sprintf("Ressource based constrained delegation removed for %s", distinguishedName))
+			err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity", existingValues)
+			if err != nil {
+				return fmt.Errorf("error removing ressource-based constrained delegation of %s to %s: %s", distinguishedName, allowedToActOnBehalfOfAnotherIdentity, err)
+			}
+			logger.Info(fmt.Sprintf("Ressource-based constrained delegation removed for %s", distinguishedName))
+		} else {
+			logger.Info(fmt.Sprintf("No changes made to msDS-AllowedToActOnBehalfOfOtherIdentity for %s", distinguishedName))
+		}
 
 	} else {
 		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)

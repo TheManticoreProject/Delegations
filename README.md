@@ -25,10 +25,16 @@
   - [x] Find unconstrained delegations
   - [x] Find constrained delegations with or without protocol transition
   - [x] Find resource-based constrained delegations
+- [x] Clear mode:
+  - [x] Clear existing unconstrained delegations
+  - [x] Clear existing constrained delegations with or without protocol transition
+  - [x] Clear existing resource-based constrained delegations
 - [x] Remove mode:
   - [x] Remove existing unconstrained delegations
   - [x] Remove existing constrained delegations with or without protocol transition
   - [x] Remove existing resource-based constrained delegations
+- [x] Monitor mode:
+  - [x] Monitor modifications of all types of delegations in real-time
 - [x] Protocol transition mode:
   - [x] Add protocol transition on a constrained delegation
   - [x] Remove protocol transition on a constrained delegation
@@ -58,7 +64,7 @@ The add mode allows you to add a constrained, unconstrained, or resource-based c
 $ ./Delegations add constrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
 ```
 
-<img src="./.github/examples/add.png" alt="Demonstration of Add Mode" width="100%">
+<img src="./.github/examples/add_constrained.png" alt="Demonstration of Add Mode" width="100%">
 
 
 ```
@@ -76,6 +82,58 @@ $ ./Delegations add rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE
 
 
 <details>
+<summary><b>Clear Mode</b></summary>
+
+The clear mode allows you to clear a constrained, unconstrained, or resource-based constrained delegation on an object:
+
+```
+$ ./Delegations clear constrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+
+<img src="./.github/examples/clear_constrained.png" alt="Demonstration of Clear Mode" width="100%">
+
+
+```
+$ ./Delegations clear unconstrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+
+<img src="./.github/examples/clear_unconstrained.png" alt="Demonstration of Clear Mode" width="100%">
+
+```
+$ ./Delegations clear rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+
+<img src="./.github/examples/clear_rbcd.png" alt="Demonstration of Clear Mode" width="100%">
+</details>
+
+
+<details>
+<summary><b>Find Mode</b></summary>
+
+The find mode allows you to find a constrained, unconstrained, or resource-based constrained delegation on an object:
+
+```
+$ ./Delegations find constrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+
+<img src="./.github/examples/find_constrained.png" alt="Demonstration of Find Mode" width="100%">
+
+
+```
+$ ./Delegations find unconstrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+
+<img src="./.github/examples/find_unconstrained.png" alt="Demonstration of Find Mode" width="100%">
+
+```
+$ ./Delegations find rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```
+
+<img src="./.github/examples/find_rbcd.png" alt="Demonstration of Find Mode" width="100%">
+</details>
+
+
+<details>
 <summary><b>Remove Mode</b></summary>
 
 The remove mode allows you to remove a constrained, unconstrained, or resource-based constrained delegation from an object:
@@ -84,7 +142,7 @@ The remove mode allows you to remove a constrained, unconstrained, or resource-b
 $ ./Delegations remove constrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
 ```
 
-<img src="./.github/examples/remove.png" alt="Demonstration of Remove Mode" width="100%">
+<img src="./.github/examples/remove_constrained.png" alt="Demonstration of Remove Mode" width="100%">
 
 ```
 $ ./Delegations remove unconstrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'

@@ -30,30 +30,39 @@ func ClearRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, cre
 		return fmt.Errorf("error connecting to LDAP: %s", err)
 	}
 
+	// Check if the object exists
+	exists, err := ldapSession.DistinguishedNameExists(distinguishedName)
+	if err != nil {
+		return fmt.Errorf("error checking if distinguished name exists: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
+	}
+
 	searchQuery := fmt.Sprintf("(distinguishedName=%s)", distinguishedName)
-	searchAttributes := []string{"msDS-AllowedToActOnBehalfOfOtherIdentity"}
-	searchResults, err := ldapSession.QueryWholeSubtree("", searchQuery, searchAttributes)
+	searchResults, err := ldapSession.QueryWholeSubtree("", searchQuery, []string{"msDS-AllowedToActOnBehalfOfOtherIdentity"})
 	if err != nil {
 		return fmt.Errorf("error querying msDS-AllowedToActOnBehalfOfOtherIdentity: %s", err)
 	}
 
+	// Clear ressource based constrained delegation
 	if len(searchResults) > 0 {
 		values := searchResults[0].GetEqualFoldAttributeValues("msDS-AllowedToActOnBehalfOfOtherIdentity")
 
 		if len(values) == 0 {
-			logger.Info(fmt.Sprintf("No msDS-AllowedToActOnBehalfOfOtherIdentity exists for %s", distinguishedName))
+			logger.Info(fmt.Sprintf("Attribute msDS-AllowedToActOnBehalfOfOtherIdentity is empty for %s", distinguishedName))
 			return nil
 		} else {
-			err = ldapSession.FlushAttribute(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity")
+			err = ldapSession.FlushAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity")
 			if err != nil {
 				return fmt.Errorf("error clearing msDS-AllowedToActOnBehalfOfOtherIdentity: %s", err)
 			}
 		}
 
-		logger.Info(fmt.Sprintf("Ressource based constrained delegation removed for %s", distinguishedName))
+		logger.Info(fmt.Sprintf("Ressource based constrained delegation cleared for %s", distinguishedName))
 
 	} else {
-		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
+		return fmt.Errorf("could not find a computer, person or user having a ressource based constrained delegation for distinguished name: %s", distinguishedName)
 	}
 
 	ldapSession.Close()

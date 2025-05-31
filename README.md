@@ -46,8 +46,8 @@
 
 The audit mode allows you to scan your Active Directory environment for all types of delegations:
 
-```
-$ ./Delegations audit --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```bash
+./Delegations audit --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p "Admin123!"
 ```
 
 <img src="./.github/examples/audit.png" alt="Demonstration of Audit Mode" width="100%">
@@ -60,21 +60,21 @@ $ ./Delegations audit --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator
 
 The add mode allows you to add a constrained, unconstrained, or resource-based constrained delegation on an object:
 
-```
-$ ./Delegations add constrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```bash
+./Delegations add constrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!' --allowed-to-delegate-to "HOST/PC02.MANTICORE.local"
 ```
 
 <img src="./.github/examples/add_constrained.png" alt="Demonstration of Add Mode" width="100%">
 
 
-```
-$ ./Delegations add unconstrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```bash
+./Delegations add unconstrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
 
 <img src="./.github/examples/add_unconstrained.png" alt="Demonstration of Add Mode" width="100%">
 
-```
-$ ./Delegations add rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```bash
+./Delegations add rbcd --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
 
 <img src="./.github/examples/add_rbcd.png" alt="Demonstration of Add Mode" width="100%">
@@ -86,21 +86,28 @@ $ ./Delegations add rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE
 
 The clear mode allows you to clear a constrained, unconstrained, or resource-based constrained delegation on an object:
 
-```
-$ ./Delegations clear constrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```bash
+./Delegations clear constrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
 
 <img src="./.github/examples/clear_constrained.png" alt="Demonstration of Clear Mode" width="100%">
 
-
+```bash
+./Delegations clear constrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!' --with-protocol-transition
 ```
-$ ./Delegations clear unconstrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+
+<img src="./.github/examples/clear_constrained_with_protocol_transition.png" alt="Demonstration of Clear Mode" width="100%">
+
+
+
+```bash
+./Delegations clear unconstrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
 
 <img src="./.github/examples/clear_unconstrained.png" alt="Demonstration of Clear Mode" width="100%">
 
-```
-$ ./Delegations clear rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```bash
+./Delegations clear rbcd --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
 
 <img src="./.github/examples/clear_rbcd.png" alt="Demonstration of Clear Mode" width="100%">
@@ -112,21 +119,21 @@ $ ./Delegations clear rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICO
 
 The find mode allows you to find a constrained, unconstrained, or resource-based constrained delegation on an object:
 
-```
-$ ./Delegations find constrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```bash
+./Delegations find constrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
 
 <img src="./.github/examples/find_constrained.png" alt="Demonstration of Find Mode" width="100%">
 
 
-```
-$ ./Delegations find unconstrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```bash
+./Delegations find unconstrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
 
 <img src="./.github/examples/find_unconstrained.png" alt="Demonstration of Find Mode" width="100%">
 
-```
-$ ./Delegations find rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```bash
+./Delegations find rbcd --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
 
 <img src="./.github/examples/find_rbcd.png" alt="Demonstration of Find Mode" width="100%">
@@ -138,20 +145,20 @@ $ ./Delegations find rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICOR
 
 The remove mode allows you to remove a constrained, unconstrained, or resource-based constrained delegation from an object:
 
-```
-$ ./Delegations remove constrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```bash
+./Delegations remove constrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
 
 <img src="./.github/examples/remove_constrained.png" alt="Demonstration of Remove Mode" width="100%">
 
-```
-$ ./Delegations remove unconstrained --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```bash
+./Delegations remove unconstrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
 
 <img src="./.github/examples/remove_unconstrained.png" alt="Demonstration of Remove Mode" width="100%">
 
-```
-$ ./Delegations remove rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```bash
+./Delegations remove rbcd --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
 
 <img src="./.github/examples/remove_rbcd.png" alt="Demonstration of Remove Mode" width="100%">
@@ -161,16 +168,16 @@ $ ./Delegations remove rbcd --distinguished-name 'CN=PC01,CN=Computers,DC=MANTIC
 <details>
 <summary><b>Protocol Transition Mode</b></summary>
 
-The protocol transition mode allows you to add a protocol transition delegation to an object:
+The protocol transition mode allows you to add or remove protocol transition for a constrained delegation on an object:
 
-```
-$ ./Delegations add protocoltransition --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```bash
+./Delegations add protocoltransition --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
 
 <img src="./.github/examples/add_protocol_transition.png" alt="Demonstration of Protocol Transition Mode" width="100%">
 
-```
-$ ./Delegations remove protocoltransition --distinguished-name 'CN=PC01,CN=Computers,DC=MANTICORE,DC=local' --dc-ip 192.168.56.101 -d MANTICORE.local -u Administrator -p 'Admin123!'
+```bash
+./Delegations remove protocoltransition --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
 
 <img src="./.github/examples/remove_protocol_transition.png" alt="Demonstration of Protocol Transition Mode" width="100%">
@@ -183,22 +190,23 @@ $ ./Delegations remove protocoltransition --distinguished-name 'CN=PC01,CN=Compu
 The first positional argument of the program is the mode:
 
 ```
-$ ./Delegations 
+./Delegations 
 Delegations - by Remi GASCOU (Podalirius) @ TheManticoreProject - v1.0.0
 
-Usage: Delegations <add|audit|find|monitor|remove>
+Usage: Delegations <add|audit|clear|find|monitor|remove>
 
-   remove   Remove a constrained, unconstrained, or resource-based constrained delegation from a user or group.
    add      Add a constrained, unconstrained, or resource-based constrained delegation to a user or group.
    audit    Audit constrained, unconstrained, and resource-based constrained delegations in Active Directory.
+   clear    Clear a constrained, unconstrained, or resource-based constrained delegation from a user or group.
    find     Find a constrained, unconstrained, or resource-based constrained delegation from a user or group.
    monitor  Monitor constrained, unconstrained, and resource-based constrained delegations in Active Directory.
+   remove   Remove a constrained, unconstrained, or resource-based constrained delegation from a user or group.
 ```
 
 Then for modes `add`, `remove` and `find`, the second positional argument is the delegation type:
 
 ```
-$ ./Delegations add 
+./Delegations add 
 Delegations - by Remi GASCOU (Podalirius) @ TheManticoreProject - v1.0.0
 
 Usage: Delegations add <constrained|rbcd|unconstrained>
@@ -212,7 +220,7 @@ Usage: Delegations add <constrained|rbcd|unconstrained>
 For mode `audit` all delegation types are audited at once, no more positional arguments are needed, only options:
 
 ```
-$ ./Delegations audit
+./Delegations audit
 Delegations - by Remi GASCOU (Podalirius) @ TheManticoreProject - v1.0.0
 
 Usage: Delegations audit --domain <string> --username <string> [--password <string>] [--hashes <string>] [--debug] --dc-ip <string> [--ldap-port <tcp port>] [--use-ldaps] [--use-kerberos]

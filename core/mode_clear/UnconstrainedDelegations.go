@@ -30,9 +30,18 @@ func ClearUnconstrainedDelegation(ldapHost string, ldapPort int, creds *credenti
 	if !success {
 		return fmt.Errorf("error connecting to LDAP: %s", err)
 	}
+
+	// Check if the object exists
+	exists, err := ldapSession.DistinguishedNameExists(distinguishedName)
+	if err != nil {
+		return fmt.Errorf("error checking if distinguished name exists: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
+	}
+
 	searchQuery := fmt.Sprintf("(distinguishedName=%s)", distinguishedName)
-	searchAttributes := []string{"userAccountControl"}
-	searchResults, err := ldapSession.QueryWholeSubtree("", searchQuery, searchAttributes)
+	searchResults, err := ldapSession.QueryWholeSubtree("", searchQuery, []string{"userAccountControl"})
 	if err != nil {
 		return fmt.Errorf("error querying userAccountControl: %s", err)
 	}
@@ -59,12 +68,12 @@ func ClearUnconstrainedDelegation(ldapHost string, ldapPort int, creds *credenti
 		// Update the userAccountControl attribute
 		err = ldapSession.OverwriteAttributeValues(distinguishedName, "userAccountControl", []string{fmt.Sprintf("%d", uacValue)})
 		if err != nil {
-			return fmt.Errorf("error removing unconstrained delegation for %s: %s", distinguishedName, err)
+			return fmt.Errorf("error clearing unconstrained delegation for %s: %s", distinguishedName, err)
 		}
 
-		logger.Info(fmt.Sprintf("Unconstrained delegation removed for %s", distinguishedName))
+		logger.Info(fmt.Sprintf("Unconstrained delegation cleared for %s", distinguishedName))
 	} else {
-		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
+		return fmt.Errorf("could not find a computer, person or user having an unconstrained delegation for distinguished name: %s", distinguishedName)
 	}
 
 	ldapSession.Close()

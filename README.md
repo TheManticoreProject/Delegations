@@ -165,6 +165,12 @@ The remove mode allows you to remove a constrained, unconstrained, or resource-b
 <img src="./.github/examples/remove_constrained.png" alt="Demonstration of Remove Mode" width="100%">
 
 ```bash
+./Delegations remove constrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!' --with-protocol-transition
+```
+
+<img src="./.github/examples/remove_constrained_with_protocol_transition.png" alt="Demonstration of Remove Mode" width="100%">
+
+```bash
 ./Delegations remove unconstrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
 

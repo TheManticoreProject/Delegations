@@ -6,7 +6,6 @@ import (
 
 	"github.com/TheManticoreProject/Manticore/logger"
 	"github.com/TheManticoreProject/Manticore/network/ldap"
-	"github.com/TheManticoreProject/Manticore/network/ldap/ldap_attributes"
 	"github.com/TheManticoreProject/Manticore/windows/credentials"
 )
 
@@ -45,13 +44,8 @@ func AddConstrainedDelegationWithProtocolTransition(ldapHost string, ldapPort in
 	query := "(&"
 	// We are looking for either a user, computer or person
 	query += "(|(objectClass=computer)(objectClass=person)(objectClass=user))"
-	query += "(&"
 	// Searching for the object with the given distinguished name
 	query += fmt.Sprintf("(distinguishedName=%s)", distinguishedName)
-	// With the userAccountControl attribute cleared of the flag UAF_TRUSTED_TO_AUTH_FOR_DELEGATION (protocol transition disabled)
-	query += fmt.Sprintf("(!(userAccountControl:1.2.840.113556.1.4.803:=%d))", ldap_attributes.UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)
-	// Closing the second AND
-	query += ")"
 	// Closing the first AND
 	query += ")"
 	searchResults, err := ldapSession.QueryWholeSubtree("", query, []string{"msDS-AllowedToDelegateTo", "userAccountControl"})

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/TheManticoreProject/Delegations/core/mode_remove"
 	"github.com/TheManticoreProject/Manticore/logger"
 	"github.com/TheManticoreProject/Manticore/network/ldap"
-	"github.com/TheManticoreProject/Manticore/network/ldap/ldap_attributes"
 	"github.com/TheManticoreProject/Manticore/windows/credentials"
 )
 
@@ -44,13 +44,8 @@ func AddConstrainedDelegation(ldapHost string, ldapPort int, creds *credentials.
 	query := "(&"
 	// We are looking for either a user, computer or person
 	query += "(|(objectClass=computer)(objectClass=person)(objectClass=user))"
-	query += "(&"
 	// Searching for the object with the given distinguished name
 	query += fmt.Sprintf("(distinguishedName=%s)", distinguishedName)
-	// With the userAccountControl attribute cleared of the flag UAF_TRUSTED_TO_AUTH_FOR_DELEGATION (protocol transition disabled)
-	query += fmt.Sprintf("(!(userAccountControl:1.2.840.113556.1.4.803:=%d))", ldap_attributes.UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)
-	// Closing the second AND
-	query += ")"
 	// Closing the first AND
 	query += ")"
 	// Querying the msDS-AllowedToDelegateTo attribute
@@ -61,6 +56,10 @@ func AddConstrainedDelegation(ldapHost string, ldapPort int, creds *credentials.
 
 	// Add constrained delegation
 	if len(searchResults) > 0 {
+		// Remove protocol transition (TRUSTED_TO_AUTH_FOR_DELEGATION flag)
+		mode_remove.RemoveProtocolTransition(ldapHost, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
+
+		// Add constrained delegation
 		values := searchResults[0].GetEqualFoldAttributeValues("msDS-AllowedToDelegateTo")
 		for _, value := range allowedToDelegateTo {
 			if !slices.Contains(values, value) {

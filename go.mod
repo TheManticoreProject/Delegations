@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/TheManticoreProject/Manticore v1.0.2
 	github.com/TheManticoreProject/goopts v1.2.1
-	github.com/TheManticoreProject/winacl v1.2.11
+	github.com/TheManticoreProject/winacl v1.2.13
 )
 
 require (

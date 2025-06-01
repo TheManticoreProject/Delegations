@@ -11,7 +11,9 @@ import (
 	"github.com/TheManticoreProject/Manticore/network/ldap"
 	"github.com/TheManticoreProject/winacl/ace"
 	"github.com/TheManticoreProject/winacl/ace/acetype"
+	"github.com/TheManticoreProject/winacl/acl"
 	"github.com/TheManticoreProject/winacl/acl/revision"
+	"github.com/TheManticoreProject/winacl/identity"
 	ace_rights "github.com/TheManticoreProject/winacl/rights"
 	"github.com/TheManticoreProject/winacl/securitydescriptor"
 	"github.com/TheManticoreProject/winacl/securitydescriptor/control"
@@ -151,10 +153,16 @@ func UpdateNTSecurityDescriptorDACL(ldapSession *ldap.Session, rawNTSecurityDesc
 		ntsd.Header.Control.AddControl(control.NT_SECURITY_DESCRIPTOR_CONTROL_PS)
 		ntsd.Header.Control.AddControl(control.NT_SECURITY_DESCRIPTOR_CONTROL_OD)
 
+		ntsd.Owner = &identity.Identity{}
 		ntsd.Owner.SID.FromString("S-1-5-32-544")
 
 		// The group need to not be set
+		ntsd.Group = nil
 
+		// The SACL need to not be set
+		ntsd.SACL = nil
+
+		ntsd.DACL = &acl.DiscretionaryAccessControlList{}
 		ntsd.DACL.Header.Revision.SetRevision(revision.ACL_REVISION_DS)
 	} else {
 		// Unmarshal the existing NTSecurityDescriptor

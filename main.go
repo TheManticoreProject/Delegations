@@ -53,7 +53,7 @@ func parseArgs() {
 	subparser_add := ap.AddSubParser("add", "Add a constrained, unconstrained, or resource-based constrained delegation to a user or group.")
 	subparser_add.SetupSubParsing("delegationType", &delegationType, true)
 
-	// Add subparser for add constrained delegation ========================================================================================
+	// subparser for add constrained delegation ========================================================================================
 	subparser_add_constrained := subparser_add.AddSubParser("constrained", "Add a constrained delegation to a user or group.")
 	subparser_add_constrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
@@ -88,7 +88,7 @@ func parseArgs() {
 		subparser_add_constrained_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
 	}
 
-	// Add subparser for add ressource_based delegation ========================================================================================
+	// subparser for add ressource_based delegation ========================================================================================
 	subparser_add_ressource_based := subparser_add.AddSubParser("rbcd", "Add a ressource-based delegation to a user or group.")
 	subparser_add_ressource_based.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
@@ -121,7 +121,7 @@ func parseArgs() {
 		subparser_add_ressource_based_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
 	}
 
-	// Add subparser for add unconstrained delegation ========================================================================================
+	// subparser for add unconstrained delegation ========================================================================================
 	subparser_add_unconstrained := subparser_add.AddSubParser("unconstrained", "Add a unconstrained delegation to a user or group.")
 	subparser_add_unconstrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
@@ -187,7 +187,7 @@ func parseArgs() {
 	subparser_clear := ap.AddSubParser("clear", "Clear a constrained, unconstrained, or resource-based constrained delegation from a user or group.")
 	subparser_clear.SetupSubParsing("delegationType", &delegationType, true)
 
-	// Remove subparser for clear constrained delegation ========================================================================================
+	// subparser for clear constrained delegation ========================================================================================
 	subparser_clear_constrained := subparser_clear.AddSubParser("constrained", "Clear a constrained delegation to a user or group.")
 	subparser_clear_constrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
@@ -196,6 +196,7 @@ func parseArgs() {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s", err))
 	} else {
 		subparser_clear_constrained_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_clear_constrained_group_config.NewBoolArgument(&withProtocolTransition, "-w", "--with-protocol-transition", false, "Clear protocol transition on this object on this object.")
 		subparser_clear_constrained_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to clear for delegations on.")
 	}
 	// LDAP Connection Settings
@@ -219,7 +220,7 @@ func parseArgs() {
 		subparser_clear_constrained_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
 	}
 
-	// Remove subparser for clear ressource_based delegation ========================================================================================
+	// subparser for clear ressource_based delegation ========================================================================================
 	subparser_clear_ressource_based := subparser_clear.AddSubParser("rbcd", "Clear a ressource-based delegation to a user or group.")
 	subparser_clear_ressource_based.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
@@ -251,7 +252,7 @@ func parseArgs() {
 		subparser_clear_ressource_based_group_auth.NewStringArgument(&authHashes, "-H", "--hashes", "", false, "NT/LM hashes, format is LMhash:NThash.")
 	}
 
-	// Remove subparser for clear unconstrained delegation ========================================================================================
+	// subparser for clear unconstrained delegation ========================================================================================
 	subparser_clear_unconstrained := subparser_clear.AddSubParser("unconstrained", "Clear a unconstrained delegation to a user or group.")
 	subparser_clear_unconstrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
@@ -287,7 +288,7 @@ func parseArgs() {
 	subparser_find := ap.AddSubParser("find", "Find a constrained, unconstrained, or resource-based constrained delegation from a user or group.")
 	subparser_find.SetupSubParsing("delegationType", &delegationType, true)
 
-	// Find subparser for find constrained delegation ========================================================================================
+	// subparser for find constrained delegation ========================================================================================
 	subparser_find_constrained := subparser_find.AddSubParser("constrained", "Find a constrained delegation to a user or group.")
 	subparser_find_constrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
@@ -298,7 +299,6 @@ func parseArgs() {
 		subparser_find_constrained_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
 		subparser_find_constrained_group_config.NewBoolArgument(&withProtocolTransition, "-w", "--with-protocol-transition", false, "Enable protocol transition on this object on this object.")
 		subparser_find_constrained_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to search for delegations.")
-		subparser_find_constrained_group_config.NewListOfStringsArgument(&allowedToDelegateTo, "-a", "--allowed-to-delegate-to", []string{}, true, "User or group to delegate to.")
 	}
 	// LDAP Connection Settings
 	subparser_find_constrained_group_ldapSettings, err := subparser_find_constrained.NewArgumentGroup("LDAP Connection Settings")
@@ -363,7 +363,6 @@ func parseArgs() {
 	} else {
 		subparser_find_ressource_based_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
 		subparser_find_ressource_based_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the user or group to add the delegation to.")
-		subparser_find_ressource_based_group_config.NewListOfStringsArgument(&allowedToActOnBehalfOfAnotherIdentity, "-a", "--allowed-to-act-on-behalf-of-another-identity", []string{}, true, "User or group to act on behalf of.")
 	}
 	// LDAP Connection Settings
 	subparser_find_ressource_based_group_ldapSettings, err := subparser_find_ressource_based.NewArgumentGroup("LDAP Connection Settings")
@@ -679,23 +678,23 @@ func main() {
 	} else if mode == "find" {
 		if delegationType == "constrained" {
 			if withProtocolTransition {
-				err = mode_find.FindConstrainedDelegationsWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
+				err = mode_find.FindConstrainedDelegationsWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 				if err != nil {
 					logger.Warn(fmt.Sprintf("Error finding constrained delegations with protocol transition: %s", err))
 				}
 			} else {
-				err = mode_find.FindConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
+				err = mode_find.FindConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 				if err != nil {
 					logger.Warn(fmt.Sprintf("Error finding constrained delegations: %s", err))
 				}
 			}
 		} else if delegationType == "unconstrained" {
-			err = mode_find.FindUnconstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
+			err = mode_find.FindUnconstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 			if err != nil {
 				logger.Warn(fmt.Sprintf("Error finding unconstrained delegations: %s", err))
 			}
 		} else if delegationType == "rbcd" {
-			err = mode_find.FindRessourceBasedConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
+			err = mode_find.FindRessourceBasedConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 			if err != nil {
 				logger.Warn(fmt.Sprintf("Error finding ressource-based constrained delegations: %s", err))
 			}

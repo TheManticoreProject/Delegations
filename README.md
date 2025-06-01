@@ -66,6 +66,12 @@ The add mode allows you to add a constrained, unconstrained, or resource-based c
 
 <img src="./.github/examples/add_constrained.png" alt="Demonstration of Add Mode" width="100%">
 
+```bash
+./Delegations add constrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!' --allowed-to-delegate-to "HOST/PC02.MANTICORE.local" --with-protocol-transition
+```
+
+<img src="./.github/examples/add_constrained_with_protocol_transition.png" alt="Demonstration of Add Mode" width="100%">
+
 
 ```bash
 ./Delegations add unconstrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
@@ -78,6 +84,7 @@ The add mode allows you to add a constrained, unconstrained, or resource-based c
 ```
 
 <img src="./.github/examples/add_rbcd.png" alt="Demonstration of Add Mode" width="100%">
+
 </details>
 
 
@@ -98,8 +105,6 @@ The clear mode allows you to clear a constrained, unconstrained, or resource-bas
 
 <img src="./.github/examples/clear_constrained_with_protocol_transition.png" alt="Demonstration of Clear Mode" width="100%">
 
-
-
 ```bash
 ./Delegations clear unconstrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
 ```
@@ -111,6 +116,7 @@ The clear mode allows you to clear a constrained, unconstrained, or resource-bas
 ```
 
 <img src="./.github/examples/clear_rbcd.png" alt="Demonstration of Clear Mode" width="100%">
+
 </details>
 
 
@@ -125,6 +131,12 @@ The find mode allows you to find a constrained, unconstrained, or resource-based
 
 <img src="./.github/examples/find_constrained.png" alt="Demonstration of Find Mode" width="100%">
 
+```bash
+./Delegations find constrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!' --with-protocol-transition
+```
+
+<img src="./.github/examples/find_constrained_with_protocol_transition.png" alt="Demonstration of Find Mode" width="100%">
+
 
 ```bash
 ./Delegations find unconstrained --distinguished-name "CN=PC01,CN=Computers,DC=MANTICORE,DC=local" --dc-ip "192.168.56.101" -d "MANTICORE.local" -u "Administrator" -p 'Admin123!'
@@ -137,6 +149,7 @@ The find mode allows you to find a constrained, unconstrained, or resource-based
 ```
 
 <img src="./.github/examples/find_rbcd.png" alt="Demonstration of Find Mode" width="100%">
+
 </details>
 
 

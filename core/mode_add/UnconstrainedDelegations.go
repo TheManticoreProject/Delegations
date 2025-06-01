@@ -30,6 +30,16 @@ func AddUnconstrainedDelegation(ldapHost string, ldapPort int, creds *credential
 	if !success {
 		return fmt.Errorf("error connecting to LDAP: %s", err)
 	}
+
+	// Check if the object exists
+	exists, err := ldapSession.DistinguishedNameExists(distinguishedName)
+	if err != nil {
+		return fmt.Errorf("error checking if distinguished name exists: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
+	}
+
 	searchQuery := fmt.Sprintf("(distinguishedName=%s)", distinguishedName)
 	searchAttributes := []string{"userAccountControl"}
 	searchResults, err := ldapSession.QueryWholeSubtree("", searchQuery, searchAttributes)
@@ -64,7 +74,7 @@ func AddUnconstrainedDelegation(ldapHost string, ldapPort int, creds *credential
 
 		logger.Info(fmt.Sprintf("Unconstrained delegation added for %s", distinguishedName))
 	} else {
-		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
+		return fmt.Errorf("could not find a computer, person or user having an unconstrained delegation for distinguished name: %s", distinguishedName)
 	}
 
 	ldapSession.Close()

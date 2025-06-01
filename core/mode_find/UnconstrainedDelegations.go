@@ -23,7 +23,7 @@ import (
 // Returns:
 //
 //	An error if the operation fails, nil otherwise.
-func FindUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, debug bool) error {
+func FindUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, debug bool) error {
 	ldapSession := ldap.Session{}
 	ldapSession.InitSession(ldapHost, ldapPort, creds, useLdaps, useKerberos)
 	success, err := ldapSession.Connect()
@@ -32,14 +32,18 @@ func FindUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credenti
 	}
 
 	query := "(&"
-	query += "(|"
-	query += "(objectClass=computer)"
-	query += "(objectClass=person)"
-	query += "(objectClass=user)"
-	query += ")"
+	// We are looking for either a user, computer or person
+	query += "(|(objectClass=computer)(objectClass=person)(objectClass=user))"
+	if len(distinguishedName) > 0 {
+		// Searching for the object with the given distinguished name
+		query += fmt.Sprintf("(distinguishedName=%s)", distinguishedName)
+	}
+	// With the userAccountControl attribute with the flag UAF_TRUSTED_FOR_DELEGATION set (unconstrained delegation enabled)
 	query += fmt.Sprintf("(userAccountControl:1.2.840.113556.1.4.803:=%d)", ldap_attributes.UAF_TRUSTED_FOR_DELEGATION)
+	// Closing the first AND
 	query += ")"
-	searchResults, err := ldapSession.QueryWholeSubtree("", query, []string{})
+	// Querying the userAccountControl attribute
+	searchResults, err := ldapSession.QueryWholeSubtree("", query, []string{"userAccountControl"})
 	if err != nil {
 		return fmt.Errorf("error performing LDAP search: %s", err)
 	}

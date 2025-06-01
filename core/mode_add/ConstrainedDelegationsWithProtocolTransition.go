@@ -6,6 +6,7 @@ import (
 
 	"github.com/TheManticoreProject/Manticore/logger"
 	"github.com/TheManticoreProject/Manticore/network/ldap"
+	"github.com/TheManticoreProject/Manticore/network/ldap/ldap_attributes"
 	"github.com/TheManticoreProject/Manticore/windows/credentials"
 )
 
@@ -32,23 +33,37 @@ func AddConstrainedDelegationWithProtocolTransition(ldapHost string, ldapPort in
 		return fmt.Errorf("error connecting to LDAP: %s", err)
 	}
 
-	searchQuery := fmt.Sprintf("(distinguishedName=%s)", distinguishedName)
-	searchAttributes := []string{"msDS-AllowedToDelegateTo", "userAccountControl"}
-	searchResults, err := ldapSession.QueryWholeSubtree("", searchQuery, searchAttributes)
+	// Check if the object exists
+	exists, err := ldapSession.DistinguishedNameExists(distinguishedName)
+	if err != nil {
+		return fmt.Errorf("error checking if distinguished name exists: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
+	}
+
+	query := "(&"
+	// We are looking for either a user, computer or person
+	query += "(|(objectClass=computer)(objectClass=person)(objectClass=user))"
+	query += "(&"
+	// Searching for the object with the given distinguished name
+	query += fmt.Sprintf("(distinguishedName=%s)", distinguishedName)
+	// With the userAccountControl attribute cleared of the flag UAF_TRUSTED_TO_AUTH_FOR_DELEGATION (protocol transition disabled)
+	query += fmt.Sprintf("(!(userAccountControl:1.2.840.113556.1.4.803:=%d))", ldap_attributes.UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)
+	// Closing the second AND
+	query += ")"
+	// Closing the first AND
+	query += ")"
+	searchResults, err := ldapSession.QueryWholeSubtree("", query, []string{"msDS-AllowedToDelegateTo", "userAccountControl"})
 	if err != nil {
 		return fmt.Errorf("error querying msDS-AllowedToDelegateTo: %s", err)
 	}
 
-	// Check if the object exists
-	if len(searchResults) == 0 {
-		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
-	}
-
-	// Activate protocol transition (TRUSTED_TO_AUTH_FOR_DELEGATION flag)
-	AddProtocolTransition(ldapHost, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
-
-	// Add constrained delegation
+	// Add constrained delegation with protocol transition
 	if len(searchResults) > 0 {
+		// Activate protocol transition (TRUSTED_TO_AUTH_FOR_DELEGATION flag)
+		AddProtocolTransition(ldapHost, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
+
 		values := searchResults[0].GetEqualFoldAttributeValues("msDS-AllowedToDelegateTo")
 		for _, value := range allowedToDelegateTo {
 			if !slices.Contains(values, value) {
@@ -66,7 +81,7 @@ func AddConstrainedDelegationWithProtocolTransition(ldapHost string, ldapPort in
 		logger.Info(fmt.Sprintf("Constrained delegation added for %s", distinguishedName))
 
 	} else {
-		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
+		return fmt.Errorf("could not find a computer, person or user having a constrained delegation with protocol transition for distinguished name: %s", distinguishedName)
 	}
 
 	ldapSession.Close()

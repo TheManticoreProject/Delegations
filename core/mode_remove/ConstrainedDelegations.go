@@ -31,27 +31,39 @@ func RemoveConstrainedDelegation(ldapHost string, ldapPort int, creds *credentia
 		return fmt.Errorf("error connecting to LDAP: %s", err)
 	}
 
+	// Check if the object exists
+	exists, err := ldapSession.DistinguishedNameExists(distinguishedName)
+	if err != nil {
+		return fmt.Errorf("error checking if distinguished name exists: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
+	}
+
 	query := "(&"
-	query += "(|"
-	query += "(objectClass=computer)"
-	query += "(objectClass=person)"
-	query += "(objectClass=user)"
-	query += ")"
+	// We are looking for either a user, computer or person
+	query += "(|(objectClass=computer)(objectClass=person)(objectClass=user))"
 	query += "(&"
+	// Searching for the object with the given distinguished name
 	query += fmt.Sprintf("(distinguishedName=%s)", distinguishedName)
+	// With the userAccountControl attribute cleared of the flag UAF_TRUSTED_TO_AUTH_FOR_DELEGATION (protocol transition disabled)
 	query += fmt.Sprintf("(!(userAccountControl:1.2.840.113556.1.4.803:=%d))", ldap_attributes.UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)
+	// Closing the second AND
 	query += ")"
+	// Closing the first AND
 	query += ")"
+	// Querying the msDS-AllowedToDelegateTo attribute
 	searchResults, err := ldapSession.QueryWholeSubtree("", query, []string{"msDS-AllowedToDelegateTo"})
 	if err != nil {
 		return fmt.Errorf("error querying msDS-AllowedToDelegateTo: %s", err)
 	}
 
+	// Remove constrained delegation
 	if len(searchResults) > 0 {
 		values := searchResults[0].GetEqualFoldAttributeValues("msDS-AllowedToDelegateTo")
 
 		if len(values) == 0 {
-			logger.Info(fmt.Sprintf("No msDS-AllowedToDelegateTo exists for %s", distinguishedName))
+			logger.Print(fmt.Sprintf("No msDS-AllowedToDelegateTo exists for %s", distinguishedName))
 			return nil
 		}
 
@@ -74,24 +86,15 @@ func RemoveConstrainedDelegation(ldapHost string, ldapPort int, creds *credentia
 			logger.Debug(fmt.Sprintf("New msDS-AllowedToDelegateTo values: %v", newValues))
 		}
 
-		if len(newValues) == 0 {
-			logger.Info(fmt.Sprintf("No msDS-AllowedToDelegateTo values left for %s", distinguishedName))
-
-			err = ldapSession.FlushAttribute(distinguishedName, "msDS-AllowedToDelegateTo")
-			if err != nil {
-				return fmt.Errorf("error flushing msDS-AllowedToDelegateTo: %s", err)
-			}
-		} else {
-			err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToDelegateTo", newValues)
-			if err != nil {
-				return fmt.Errorf("error removing constrained delegation of %s from %s: %s", distinguishedName, allowedToDelegateTo, err)
-			}
+		err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToDelegateTo", newValues)
+		if err != nil {
+			return fmt.Errorf("error removing constrained delegation of %s from %s: %s", distinguishedName, allowedToDelegateTo, err)
 		}
 
 		logger.Info(fmt.Sprintf("Constrained delegation removed for %s", distinguishedName))
 
 	} else {
-		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
+		return fmt.Errorf("could not find a computer, person or user having a constrained delegation without protocol transition for distinguished name: %s", distinguishedName)
 	}
 
 	ldapSession.Close()

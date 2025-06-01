@@ -33,6 +33,15 @@ func AddRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, creds
 		return fmt.Errorf("error connecting to LDAP: %s", err)
 	}
 
+	// Check if the object exists
+	exists, err := ldapSession.DistinguishedNameExists(distinguishedName)
+	if err != nil {
+		return fmt.Errorf("error checking if distinguished name exists: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
+	}
+
 	searchQuery := fmt.Sprintf("(distinguishedName=%s)", distinguishedName)
 	searchAttributes := []string{"msDS-AllowedToActOnBehalfOfOtherIdentity"}
 	searchResults, err := ldapSession.QueryWholeSubtree("", searchQuery, searchAttributes)
@@ -60,12 +69,7 @@ func AddRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, creds
 		}
 
 		if !bytes.Equal(binaryNtSecurityDescriptor, oldRBCDNtSecurityDescriptor) {
-			err = ldapSession.FlushAttribute(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity")
-			if err != nil {
-				return fmt.Errorf("error flushing msDS-AllowedToActOnBehalfOfOtherIdentity: %s", err)
-			}
-
-			err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity", existingValues)
+			err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity", []string{string(binaryNtSecurityDescriptor)})
 			if err != nil {
 				return fmt.Errorf("error adding ressource-based constrained delegation of %s to %s: %s", distinguishedName, allowedToActOnBehalfOfAnotherIdentity, err)
 			}
@@ -75,7 +79,7 @@ func AddRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, creds
 		}
 
 	} else {
-		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
+		return fmt.Errorf("could not find a computer, person or user having a ressource based constrained delegation for distinguished name: %s", distinguishedName)
 	}
 
 	ldapSession.Close()

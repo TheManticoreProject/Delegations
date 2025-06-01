@@ -31,33 +31,41 @@ func AddProtocolTransition(ldapHost string, ldapPort int, creds *credentials.Cre
 		return fmt.Errorf("error connecting to LDAP: %s", err)
 	}
 
-	searchQuery := fmt.Sprintf("(distinguishedName=%s)", distinguishedName)
-	searchAttributes := []string{"userAccountControl"}
-	searchResults, err := ldapSession.QueryWholeSubtree("", searchQuery, searchAttributes)
+	// Check if the object exists
+	exists, err := ldapSession.DistinguishedNameExists(distinguishedName)
+	if err != nil {
+		return fmt.Errorf("error checking if distinguished name exists: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
+	}
+
+	searchResults, err := ldapSession.QueryWholeSubtree("", fmt.Sprintf("(distinguishedName=%s)", distinguishedName), []string{"userAccountControl"})
 	if err != nil {
 		return fmt.Errorf("error querying userAccountControl: %s", err)
 	}
 
-	if len(searchResults) == 0 {
-		return fmt.Errorf("could not find an object with distinguished name: %s", distinguishedName)
-	}
-
-	// Check if protocol transition is activated (TRUSTED_TO_AUTH_FOR_DELEGATION flag)
-	uacValue := searchResults[0].GetAttributeValue("userAccountControl")
-	uacValueInt, err := strconv.Atoi(uacValue)
-	if err != nil {
-		return fmt.Errorf("error converting userAccountControl to integer: %s", err)
-	}
-	if uacValueInt&int(ldap_attributes.UAF_TRUSTED_TO_AUTH_FOR_DELEGATION) == 0 {
-		// Protocol transition is not enabled, we need to enable it
-		newUacValue := uacValueInt | int(ldap_attributes.UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)
-		err = ldapSession.OverwriteAttributeValues(distinguishedName, "userAccountControl", []string{fmt.Sprintf("%d", newUacValue)})
+	// Add protocol transition
+	if len(searchResults) > 0 {
+		// Check if protocol transition is activated (TRUSTED_TO_AUTH_FOR_DELEGATION flag)
+		uacValue := searchResults[0].GetAttributeValue("userAccountControl")
+		uacValueInt, err := strconv.Atoi(uacValue)
 		if err != nil {
-			return fmt.Errorf("error enabling protocol transition for %s: %s", distinguishedName, err)
+			return fmt.Errorf("error converting userAccountControl to integer: %s", err)
 		}
-		logger.Info(fmt.Sprintf("Protocol transition enabled for %s", distinguishedName))
+		if uacValueInt&int(ldap_attributes.UAF_TRUSTED_TO_AUTH_FOR_DELEGATION) == 0 {
+			// Protocol transition is not enabled, we need to enable it
+			newUacValue := uacValueInt | int(ldap_attributes.UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)
+			err = ldapSession.OverwriteAttributeValues(distinguishedName, "userAccountControl", []string{fmt.Sprintf("%d", newUacValue)})
+			if err != nil {
+				return fmt.Errorf("error enabling protocol transition for %s: %s", distinguishedName, err)
+			}
+			logger.Info(fmt.Sprintf("Protocol transition enabled for %s", distinguishedName))
+		} else {
+			logger.Info(fmt.Sprintf("Protocol transition already enabled for %s", distinguishedName))
+		}
 	} else {
-		logger.Info(fmt.Sprintf("Protocol transition already enabled for %s", distinguishedName))
+		return fmt.Errorf("could not find a computer, person or user having a constrained delegation without protocol transition for distinguished name: %s", distinguishedName)
 	}
 
 	ldapSession.Close()

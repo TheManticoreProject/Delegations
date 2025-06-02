@@ -15,9 +15,10 @@ import (
 )
 
 type DelegationState struct {
-	userAccountControl                      int
-	msDSAllowedToDelegateTo                 []string
-	msDSAllowedToActOnBehalfOfOtherIdentity []string
+	userAccountControl                          int
+	msDSAllowedToDelegateTo                     []string
+	msDSAllowedToActOnBehalfOfOtherIdentity     []string
+	msDSAllowedToActOnBehalfOfOtherIdentitySIDs []string
 }
 
 // MonitorDelegations monitors the delegation settings of a user or computer account.
@@ -60,10 +61,26 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 		if err != nil {
 			return fmt.Errorf("error converting userAccountControl to int: %s", err)
 		}
+
+		// Get the SIDs from the msDS-AllowedToActOnBehalfOfOtherIdentity attribute
+		msDSAllowedToActOnBehalfOfOtherIdentitySIDs := []string{}
+		allowedToActOnBehalfOfOtherIdentity := result.GetEqualFoldAttributeValues("msDS-AllowedToActOnBehalfOfOtherIdentity")
+		if len(allowedToActOnBehalfOfOtherIdentity) > 0 {
+			ntSecurityDescriptor := securitydescriptor.NtSecurityDescriptor{}
+			_, err = ntSecurityDescriptor.Unmarshal([]byte(allowedToActOnBehalfOfOtherIdentity[0]))
+			if err != nil {
+				return fmt.Errorf("error creating security descriptor: %s", err)
+			}
+			for _, entry := range ntSecurityDescriptor.DACL.Entries {
+				msDSAllowedToActOnBehalfOfOtherIdentitySIDs = append(msDSAllowedToActOnBehalfOfOtherIdentitySIDs, entry.Identity.SID.ToString())
+			}
+		}
+
 		delegationState := DelegationState{
-			userAccountControl:                      userAccountControl,
-			msDSAllowedToDelegateTo:                 result.GetEqualFoldAttributeValues("msDS-AllowedToDelegateTo"),
-			msDSAllowedToActOnBehalfOfOtherIdentity: result.GetEqualFoldAttributeValues("msDS-AllowedToActOnBehalfOfOtherIdentity"),
+			userAccountControl:                          userAccountControl,
+			msDSAllowedToDelegateTo:                     result.GetEqualFoldAttributeValues("msDS-AllowedToDelegateTo"),
+			msDSAllowedToActOnBehalfOfOtherIdentity:     result.GetEqualFoldAttributeValues("msDS-AllowedToActOnBehalfOfOtherIdentity"),
+			msDSAllowedToActOnBehalfOfOtherIdentitySIDs: msDSAllowedToActOnBehalfOfOtherIdentitySIDs,
 		}
 		delegationMap[dn] = delegationState
 	}
@@ -93,10 +110,26 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 			if err != nil {
 				return fmt.Errorf("error converting userAccountControl to int: %s", err)
 			}
+
+			// Get the SIDs from the msDS-AllowedToActOnBehalfOfOtherIdentity attribute
+			msDSAllowedToActOnBehalfOfOtherIdentitySIDs := []string{}
+			allowedToActOnBehalfOfOtherIdentity := result.GetEqualFoldAttributeValues("msDS-AllowedToActOnBehalfOfOtherIdentity")
+			if len(allowedToActOnBehalfOfOtherIdentity) > 0 {
+				ntSecurityDescriptor := securitydescriptor.NtSecurityDescriptor{}
+				_, err = ntSecurityDescriptor.Unmarshal([]byte(allowedToActOnBehalfOfOtherIdentity[0]))
+				if err != nil {
+					return fmt.Errorf("error creating security descriptor: %s", err)
+				}
+				for _, entry := range ntSecurityDescriptor.DACL.Entries {
+					msDSAllowedToActOnBehalfOfOtherIdentitySIDs = append(msDSAllowedToActOnBehalfOfOtherIdentitySIDs, entry.Identity.SID.ToString())
+				}
+			}
+
 			delegationState := DelegationState{
-				userAccountControl:                      userAccountControl,
-				msDSAllowedToDelegateTo:                 result.GetEqualFoldAttributeValues("msDS-AllowedToDelegateTo"),
-				msDSAllowedToActOnBehalfOfOtherIdentity: result.GetEqualFoldAttributeValues("msDS-AllowedToActOnBehalfOfOtherIdentity"),
+				userAccountControl:                          userAccountControl,
+				msDSAllowedToDelegateTo:                     result.GetEqualFoldAttributeValues("msDS-AllowedToDelegateTo"),
+				msDSAllowedToActOnBehalfOfOtherIdentity:     result.GetEqualFoldAttributeValues("msDS-AllowedToActOnBehalfOfOtherIdentity"),
+				msDSAllowedToActOnBehalfOfOtherIdentitySIDs: msDSAllowedToActOnBehalfOfOtherIdentitySIDs,
 			}
 			newDelegationMap[dn] = delegationState
 		}
@@ -171,17 +204,13 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 			if !slices.Equal(newDelegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity, delegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity) {
 				// Check for added values
 				valuesAdded := []string{}
-				for _, newValue := range newDelegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity {
-					if !slices.Contains(delegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity, newValue) {
-						ntSecurityDescriptor := securitydescriptor.NtSecurityDescriptor{}
-						_, err := ntSecurityDescriptor.Unmarshal([]byte(newValue))
+				for _, sidString := range newDelegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentitySIDs {
+					if !slices.Contains(delegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentitySIDs, sidString) {
+						distinguishedName, err := utils.LookupSID(&ldapSession, sidString)
 						if err != nil {
-							return fmt.Errorf("error creating security descriptor: %s", err)
-						}
-						for _, entry := range ntSecurityDescriptor.DACL.Entries {
-							sidString := entry.Identity.SID.ToString()
-							sAMAccountName, _ := utils.LookupSID(&ldapSession, sidString)
-							valuesAdded = append(valuesAdded, fmt.Sprintf("  │   │   │ \x1b[1;92m%s (%s)\x1b[0m", sidString, sAMAccountName))
+							valuesAdded = append(valuesAdded, fmt.Sprintf("  │   │   │ \x1b[1;92m%s (Unknown SID)\x1b[0m", sidString))
+						} else {
+							valuesAdded = append(valuesAdded, fmt.Sprintf("  │   │   │ \x1b[1;92m%s (%s)\x1b[0m", sidString, distinguishedName))
 						}
 					}
 				}
@@ -196,17 +225,13 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 
 				// Check for removed values
 				valuesRemoved := []string{}
-				for _, oldValue := range delegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity {
-					if !slices.Contains(newDelegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentity, oldValue) {
-						ntSecurityDescriptor := securitydescriptor.NtSecurityDescriptor{}
-						_, err := ntSecurityDescriptor.Unmarshal([]byte(oldValue))
+				for _, oldSIDString := range delegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentitySIDs {
+					if !slices.Contains(newDelegationMap[dn].msDSAllowedToActOnBehalfOfOtherIdentitySIDs, oldSIDString) {
+						distinguishedName, err := utils.LookupSID(&ldapSession, oldSIDString)
 						if err != nil {
-							return fmt.Errorf("error creating security descriptor: %s", err)
-						}
-						for _, entry := range ntSecurityDescriptor.DACL.Entries {
-							sidString := entry.Identity.SID.ToString()
-							sAMAccountName, _ := utils.LookupSID(&ldapSession, sidString)
-							valuesRemoved = append(valuesRemoved, fmt.Sprintf("  │   │   │ \x1b[1;91m%s (%s)\x1b[0m", sidString, sAMAccountName))
+							valuesRemoved = append(valuesRemoved, fmt.Sprintf("  │   │   │ \x1b[1;91m%s (Unknown SID)\x1b[0m", oldSIDString))
+						} else {
+							valuesRemoved = append(valuesRemoved, fmt.Sprintf("  │   │   │ \x1b[1;91m%s (%s)\x1b[0m", oldSIDString, distinguishedName))
 						}
 					}
 				}

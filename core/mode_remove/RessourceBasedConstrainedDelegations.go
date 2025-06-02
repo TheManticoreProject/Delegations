@@ -64,13 +64,20 @@ func RemoveRessourceBasedConstrainedDelegation(ldapHost string, ldapPort int, cr
 		}
 
 		if debug {
-			logger.Info(fmt.Sprintf("Updated msDS-AllowedToActOnBehalfOfOtherIdentity value: %s", hex.EncodeToString(binaryNtSecurityDescriptor)))
+			logger.Info(fmt.Sprintf("Updated msDS-AllowedToActOnBehalfOfOtherIdentity value: \"%s\"", hex.EncodeToString(binaryNtSecurityDescriptor)))
 		}
 
 		if !bytes.Equal(binaryNtSecurityDescriptor, oldRBCDNtSecurityDescriptor) {
-			err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity", existingValues)
-			if err != nil {
-				return fmt.Errorf("error removing ressource-based constrained delegation of %s to %s: %s", distinguishedName, allowedToActOnBehalfOfAnotherIdentity, err)
+			if len(binaryNtSecurityDescriptor) == 0 {
+				err = ldapSession.FlushAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity")
+				if err != nil {
+					return fmt.Errorf("error removing ressource-based constrained delegation of %s: %s", distinguishedName, err)
+				}
+			} else {
+				err = ldapSession.OverwriteAttributeValues(distinguishedName, "msDS-AllowedToActOnBehalfOfOtherIdentity", []string{string(binaryNtSecurityDescriptor)})
+				if err != nil {
+					return fmt.Errorf("error removing ressource-based constrained delegation of %s to %s: %s", distinguishedName, allowedToActOnBehalfOfAnotherIdentity, err)
+				}
 			}
 			logger.Info(fmt.Sprintf("Ressource-based constrained delegation removed for %s", distinguishedName))
 		} else {

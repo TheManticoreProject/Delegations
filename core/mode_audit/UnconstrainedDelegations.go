@@ -24,7 +24,7 @@ import (
 // Returns:
 //
 //	An error if the operation fails, nil otherwise.
-func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, debug bool) error {
+func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, debug bool, ignoreLegitimate bool) error {
 	ldapSession := ldap.Session{}
 	ldapSession.InitSession(ldapHost, ldapPort, creds, useLdaps, useKerberos)
 	success, err := ldapSession.Connect()
@@ -59,7 +59,11 @@ func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credent
 
 			auditString := ""
 			if userAccountControl&int(ldap_attributes.UAF_SERVER_TRUST_ACCOUNT) == int(ldap_attributes.UAF_SERVER_TRUST_ACCOUNT) {
-				auditString = "(\x1b[92mLegitimate\x1b[0m: DC)"
+				if ignoreLegitimate {
+					auditString = ""
+				} else {
+					auditString = "(\x1b[92mLegitimate\x1b[0m: DC)"
+				}
 			} else if userAccountControl&int(ldap_attributes.UAF_PARTIAL_SECRETS_ACCOUNT) == int(ldap_attributes.UAF_SERVER_TRUST_ACCOUNT) {
 				auditString = "(\x1b[91mSuspicious\x1b[0m: RODCs do not have unconstrained delegation by default)"
 			} else {
@@ -67,10 +71,12 @@ func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credent
 			}
 
 			// Print the audit string
-			if k < len(searchResults)-1 {
-				logger.Print(fmt.Sprintf("  ├── \x1b[94m%s\x1b[0m %s", entry.DN, auditString))
-			} else {
-				logger.Print(fmt.Sprintf("  └── \x1b[94m%s\x1b[0m %s", entry.DN, auditString))
+			if len(auditString) > 0 {
+				if k < len(searchResults)-1 {
+					logger.Print(fmt.Sprintf("  ├── \x1b[94m%s\x1b[0m %s", entry.DN, auditString))
+				} else {
+					logger.Print(fmt.Sprintf("  └── \x1b[94m%s\x1b[0m %s", entry.DN, auditString))
+				}
 			}
 		}
 		logger.Print("")

@@ -19,7 +19,8 @@ var (
 	delegationType string
 
 	// Configuration
-	debug bool
+	debug            bool
+	ignoreLegitimate bool
 
 	// Delegations
 	withProtocolTransition                bool
@@ -162,6 +163,7 @@ func parseArgs() {
 	} else {
 		subparser_audit_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
 		subparser_audit_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", false, "Distinguished name of the computer, user or group to audit for delegations.")
+		subparser_audit_group_config.NewBoolArgument(&ignoreLegitimate, "-I", "--ignore-legitimate", false, "Ignore legitimate delegations, keep only suspicious ones.")
 	}
 	// LDAP Connection Settings
 	subparser_audit_group_ldapSettings, err := subparser_audit.NewArgumentGroup("LDAP Connection Settings")
@@ -634,19 +636,19 @@ func main() {
 		}
 
 	} else if mode == "audit" {
-		err = mode_audit.AuditUnconstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
+		err = mode_audit.AuditUnconstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug, ignoreLegitimate)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Error auditing unconstrained delegations: %s", err))
 		}
-		err = mode_audit.AuditConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
+		err = mode_audit.AuditConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug, ignoreLegitimate)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Error auditing constrained delegations: %s", err))
 		}
-		err = mode_audit.AuditConstrainedDelegationsWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
+		err = mode_audit.AuditConstrainedDelegationsWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug, ignoreLegitimate)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Error auditing constrained delegations with protocol transition: %s", err))
 		}
-		err = mode_audit.AuditRessourceBasedConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
+		err = mode_audit.AuditRessourceBasedConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug, ignoreLegitimate)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Error auditing ressource-based constrained delegations: %s", err))
 		}

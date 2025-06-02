@@ -24,7 +24,7 @@ import (
 // Returns:
 //
 //	An error if the operation fails, nil otherwise.
-func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, debug bool) error {
+func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credentials.Credentials, useLdaps bool, useKerberos bool, distinguishedName string, debug bool) error {
 	ldapSession := ldap.Session{}
 	ldapSession.InitSession(ldapHost, ldapPort, creds, useLdaps, useKerberos)
 	success, err := ldapSession.Connect()
@@ -33,14 +33,17 @@ func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credent
 	}
 
 	query := "(&"
-	query += "(|"
-	query += "(objectClass=computer)"
-	query += "(objectClass=person)"
-	query += "(objectClass=user)"
-	query += ")"
+	// We are looking for either a user, computer or person
+	query += "(|(objectClass=computer)(objectClass=person)(objectClass=user))"
+	if len(distinguishedName) > 0 {
+		// Searching for the object with the given distinguished name
+		query += fmt.Sprintf("(distinguishedName=%s)", distinguishedName)
+	}
+	// With the userAccountControl attribute set to the flag UAF_TRUSTED_FOR_DELEGATION (unconstrained delegation)
 	query += fmt.Sprintf("(userAccountControl:1.2.840.113556.1.4.803:=%d)", ldap_attributes.UAF_TRUSTED_FOR_DELEGATION)
+	// Closing the first AND
 	query += ")"
-	searchResults, err := ldapSession.QueryWholeSubtree("", query, []string{"sAMAccountType", "userAccountControl"})
+	searchResults, err := ldapSession.QueryWholeSubtree("", query, []string{"userAccountControl"})
 	if err != nil {
 		return fmt.Errorf("error performing LDAP search: %s", err)
 	}
@@ -50,7 +53,7 @@ func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credent
 		for k, entry := range searchResults {
 			userAccountControl, err := strconv.Atoi(entry.GetAttributeValue("userAccountControl"))
 			if err != nil {
-				logger.Warn(fmt.Sprintf("Error getting sAMAccountType: %s", err))
+				logger.Warn(fmt.Sprintf("Error getting userAccountControl: %s", err))
 				continue
 			}
 

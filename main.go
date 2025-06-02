@@ -50,11 +50,11 @@ func parseArgs() {
 	ap.SetOptShowBannerOnRun(true)
 
 	// add mode ============================================================================================================
-	subparser_add := ap.AddSubParser("add", "Add a constrained, unconstrained, or resource-based constrained delegation to a user or group.")
+	subparser_add := ap.AddSubParser("add", "Add a constrained, unconstrained, or resource-based constrained delegation to a computer, user or group.")
 	subparser_add.SetupSubParsing("delegationType", &delegationType, true)
 
 	// subparser for add constrained delegation ========================================================================================
-	subparser_add_constrained := subparser_add.AddSubParser("constrained", "Add a constrained delegation to a user or group.")
+	subparser_add_constrained := subparser_add.AddSubParser("constrained", "Add a constrained delegation to a computer, user or group.")
 	subparser_add_constrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_add_constrained_group_config, err := subparser_add_constrained.NewArgumentGroup("Configuration")
@@ -89,7 +89,7 @@ func parseArgs() {
 	}
 
 	// subparser for add ressource_based delegation ========================================================================================
-	subparser_add_ressource_based := subparser_add.AddSubParser("rbcd", "Add a ressource-based delegation to a user or group.")
+	subparser_add_ressource_based := subparser_add.AddSubParser("rbcd", "Add a ressource-based delegation to a computer, user or group.")
 	subparser_add_ressource_based.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_add_ressource_based_group_config, err := subparser_add_ressource_based.NewArgumentGroup("Configuration")
@@ -122,7 +122,7 @@ func parseArgs() {
 	}
 
 	// subparser for add unconstrained delegation ========================================================================================
-	subparser_add_unconstrained := subparser_add.AddSubParser("unconstrained", "Add a unconstrained delegation to a user or group.")
+	subparser_add_unconstrained := subparser_add.AddSubParser("unconstrained", "Add a unconstrained delegation to a computer, user or group.")
 	subparser_add_unconstrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_add_unconstrained_group_config, err := subparser_add_unconstrained.NewArgumentGroup("Configuration")
@@ -161,6 +161,7 @@ func parseArgs() {
 		logger.Warn(fmt.Sprintf("Error creating ArgumentGroup: %s", err))
 	} else {
 		subparser_audit_group_config.NewBoolArgument(&debug, "", "--debug", false, "Debug mode.")
+		subparser_audit_group_config.NewStringArgument(&distinguishedName, "-D", "--distinguished-name", "", true, "Distinguished name of the computer, user or group to audit for delegations.")
 	}
 	// LDAP Connection Settings
 	subparser_audit_group_ldapSettings, err := subparser_audit.NewArgumentGroup("LDAP Connection Settings")
@@ -184,11 +185,11 @@ func parseArgs() {
 	}
 
 	// clear mode ============================================================================================================
-	subparser_clear := ap.AddSubParser("clear", "Clear a constrained, unconstrained, or resource-based constrained delegation from a user or group.")
+	subparser_clear := ap.AddSubParser("clear", "Clear a constrained, unconstrained, or resource-based constrained delegation from a computer, user or group.")
 	subparser_clear.SetupSubParsing("delegationType", &delegationType, true)
 
 	// subparser for clear constrained delegation ========================================================================================
-	subparser_clear_constrained := subparser_clear.AddSubParser("constrained", "Clear a constrained delegation to a user or group.")
+	subparser_clear_constrained := subparser_clear.AddSubParser("constrained", "Clear a constrained delegation to a computer, user or group.")
 	subparser_clear_constrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_clear_constrained_group_config, err := subparser_clear_constrained.NewArgumentGroup("Configuration")
@@ -221,7 +222,7 @@ func parseArgs() {
 	}
 
 	// subparser for clear ressource_based delegation ========================================================================================
-	subparser_clear_ressource_based := subparser_clear.AddSubParser("rbcd", "Clear a ressource-based delegation to a user or group.")
+	subparser_clear_ressource_based := subparser_clear.AddSubParser("rbcd", "Clear a ressource-based delegation to a computer, user or group.")
 	subparser_clear_ressource_based.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_clear_ressource_based_group_config, err := subparser_clear_ressource_based.NewArgumentGroup("Configuration")
@@ -253,7 +254,7 @@ func parseArgs() {
 	}
 
 	// subparser for clear unconstrained delegation ========================================================================================
-	subparser_clear_unconstrained := subparser_clear.AddSubParser("unconstrained", "Clear a unconstrained delegation to a user or group.")
+	subparser_clear_unconstrained := subparser_clear.AddSubParser("unconstrained", "Clear a unconstrained delegation to a computer, user or group.")
 	subparser_clear_unconstrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_clear_unconstrained_group_config, err := subparser_clear_unconstrained.NewArgumentGroup("Configuration")
@@ -285,11 +286,11 @@ func parseArgs() {
 	}
 
 	// find mode ============================================================================================================
-	subparser_find := ap.AddSubParser("find", "Find a constrained, unconstrained, or resource-based constrained delegation from a user or group.")
+	subparser_find := ap.AddSubParser("find", "Find a constrained, unconstrained, or resource-based constrained delegation from a computer, user or group.")
 	subparser_find.SetupSubParsing("delegationType", &delegationType, true)
 
 	// subparser for find constrained delegation ========================================================================================
-	subparser_find_constrained := subparser_find.AddSubParser("constrained", "Find a constrained delegation to a user or group.")
+	subparser_find_constrained := subparser_find.AddSubParser("constrained", "Find a constrained delegation to a computer, user or group.")
 	subparser_find_constrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_find_constrained_group_config, err := subparser_find_constrained.NewArgumentGroup("Configuration")
@@ -322,7 +323,7 @@ func parseArgs() {
 	}
 
 	// Add subparser for add protocol transition ========================================================================================
-	subparser_add_protocoltransition := subparser_add.AddSubParser("protocoltransition", "Add a protocol transition to a user or group.")
+	subparser_add_protocoltransition := subparser_add.AddSubParser("protocoltransition", "Add a protocol transition to a computer, user or group.")
 	subparser_add_protocoltransition.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_add_protocoltransition_group_config, err := subparser_add_protocoltransition.NewArgumentGroup("Configuration")
@@ -354,7 +355,7 @@ func parseArgs() {
 	}
 
 	// Find subparser for find ressource_based delegation ========================================================================================
-	subparser_find_ressource_based := subparser_find.AddSubParser("rbcd", "Find a ressource-based delegation to a user or group.")
+	subparser_find_ressource_based := subparser_find.AddSubParser("rbcd", "Find a ressource-based delegation to a computer, user or group.")
 	subparser_find_ressource_based.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_find_ressource_based_group_config, err := subparser_find_ressource_based.NewArgumentGroup("Configuration")
@@ -386,7 +387,7 @@ func parseArgs() {
 	}
 
 	// Find subparser for find unconstrained delegation ========================================================================================
-	subparser_find_unconstrained := subparser_find.AddSubParser("unconstrained", "Find a unconstrained delegation to a user or group.")
+	subparser_find_unconstrained := subparser_find.AddSubParser("unconstrained", "Find a unconstrained delegation to a computer, user or group.")
 	subparser_find_unconstrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_find_unconstrained_group_config, err := subparser_find_unconstrained.NewArgumentGroup("Configuration")
@@ -449,11 +450,11 @@ func parseArgs() {
 	}
 
 	// remove mode ============================================================================================================
-	subparser_remove := ap.AddSubParser("remove", "Remove a constrained, unconstrained, or resource-based constrained delegation from a user or group.")
+	subparser_remove := ap.AddSubParser("remove", "Remove a constrained, unconstrained, or resource-based constrained delegation from a computer, user or group.")
 	subparser_remove.SetupSubParsing("delegationType", &delegationType, true)
 
 	// Remove subparser for remove constrained delegation ========================================================================================
-	subparser_remove_constrained := subparser_remove.AddSubParser("constrained", "Remove a constrained delegation to a user or group.")
+	subparser_remove_constrained := subparser_remove.AddSubParser("constrained", "Remove a constrained delegation to a computer, user or group.")
 	subparser_remove_constrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_remove_constrained_group_config, err := subparser_remove_constrained.NewArgumentGroup("Configuration")
@@ -488,7 +489,7 @@ func parseArgs() {
 	}
 
 	// Remove subparser for remove protocol transition ========================================================================================
-	subparser_remove_protocoltransition := subparser_remove.AddSubParser("protocoltransition", "Remove a protocol transition to a user or group.")
+	subparser_remove_protocoltransition := subparser_remove.AddSubParser("protocoltransition", "Remove a protocol transition to a computer, user or group.")
 	subparser_remove_protocoltransition.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_remove_protocoltransition_group_config, err := subparser_remove_protocoltransition.NewArgumentGroup("Configuration")
@@ -520,7 +521,7 @@ func parseArgs() {
 	}
 
 	// Remove subparser for remove ressource_based delegation ========================================================================================
-	subparser_remove_ressource_based := subparser_remove.AddSubParser("rbcd", "Remove a ressource-based delegation to a user or group.")
+	subparser_remove_ressource_based := subparser_remove.AddSubParser("rbcd", "Remove a ressource-based delegation to a computer, user or group.")
 	subparser_remove_ressource_based.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_remove_ressource_based_group_config, err := subparser_remove_ressource_based.NewArgumentGroup("Configuration")
@@ -553,7 +554,7 @@ func parseArgs() {
 	}
 
 	// Remove subparser for remove unconstrained delegation ========================================================================================
-	subparser_remove_unconstrained := subparser_remove.AddSubParser("unconstrained", "Remove a unconstrained delegation to a user or group.")
+	subparser_remove_unconstrained := subparser_remove.AddSubParser("unconstrained", "Remove a unconstrained delegation to a computer, user or group.")
 	subparser_remove_unconstrained.NewBoolArgument(&debug, "", "--debug", false, "Enable debug mode.")
 	// Configuration flags
 	subparser_remove_unconstrained_group_config, err := subparser_remove_unconstrained.NewArgumentGroup("Configuration")
@@ -633,19 +634,19 @@ func main() {
 		}
 
 	} else if mode == "audit" {
-		err = mode_audit.AuditUnconstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
+		err = mode_audit.AuditUnconstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Error auditing unconstrained delegations: %s", err))
 		}
-		err = mode_audit.AuditConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
+		err = mode_audit.AuditConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Error auditing constrained delegations: %s", err))
 		}
-		err = mode_audit.AuditConstrainedDelegationsWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
+		err = mode_audit.AuditConstrainedDelegationsWithProtocolTransition(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Error auditing constrained delegations with protocol transition: %s", err))
 		}
-		err = mode_audit.AuditRessourceBasedConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, debug)
+		err = mode_audit.AuditRessourceBasedConstrainedDelegations(domainController, ldapPort, creds, useLdaps, useKerberos, distinguishedName, debug)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Error auditing ressource-based constrained delegations: %s", err))
 		}

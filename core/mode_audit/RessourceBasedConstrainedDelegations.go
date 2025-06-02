@@ -64,39 +64,48 @@ func AuditRessourceBasedConstrainedDelegations(ldapHost string, ldapPort int, cr
 				logger.Print(fmt.Sprintf("      └── msDS-AllowedToActOnBehalfOfOtherIdentity (%d):", len(values)))
 			}
 
-			for valueIndex, value := range values {
+			if len(values) == 0 {
+				logger.Print("  │       \x1b[91mNo msDS-AllowedToActOnBehalfOfOtherIdentity found\x1b[0m")
+				continue
+			}
+
+			if len(values) > 1 {
+				logger.Print("  │       \x1b[91mMultiple msDS-AllowedToActOnBehalfOfOtherIdentity found (this should not happen)\x1b[0m")
+				continue
+			}
+
+			ntSecurityDescriptor := securitydescriptor.NtSecurityDescriptor{}
+			_, err := ntSecurityDescriptor.Unmarshal([]byte(values[0]))
+			if err != nil {
+				return fmt.Errorf("error creating security descriptor: %s", err)
+			}
+			for entryIndex, entry := range ntSecurityDescriptor.DACL.Entries {
 				var separator string
-				if valueIndex < len(values)-1 {
+				if entryIndex < len(ntSecurityDescriptor.DACL.Entries)-1 {
 					separator = "├──"
 				} else {
 					separator = "└──"
 				}
 
-				ntSecurityDescriptor := securitydescriptor.NtSecurityDescriptor{}
-				_, err := ntSecurityDescriptor.Unmarshal([]byte(value))
+				sidString := entry.Identity.SID.ToString()
+				distingushedName, err := utils.LookupSID(&ldapSession, sidString)
+
+				// Format the string depending on if the SID lookup failed or not
+				var formattedString string
 				if err != nil {
-					return fmt.Errorf("error creating security descriptor: %s", err)
+					formattedString = fmt.Sprintf("%s \x1b[91m%s\x1b[0m (\x1b[91mUnknown SID\x1b[0m)", separator, sidString)
+				} else {
+					formattedString = fmt.Sprintf("%s \x1b[92m%s\x1b[0m", separator, distingushedName)
 				}
-				for _, entry := range ntSecurityDescriptor.DACL.Entries {
-					sidString := entry.Identity.SID.ToString()
-					distingushedName, err := utils.LookupSID(&ldapSession, sidString)
 
-					// Format the string depending on if the SID lookup failed or not
-					var formattedString string
-					if err != nil {
-						formattedString = fmt.Sprintf("%s \x1b[91m%s\x1b[0m (\x1b[91mUnknown SID\x1b[0m)", separator, sidString)
-					} else {
-						formattedString = fmt.Sprintf("%s \x1b[92m%s\x1b[0m", separator, distingushedName)
-					}
-
-					// Print the formatted string
-					if entryIndex < len(searchResults)-1 {
-						logger.Print("  │       " + formattedString)
-					} else {
-						logger.Print("          " + formattedString)
-					}
+				// Print the formatted string
+				if entryIndex < len(searchResults)-1 {
+					logger.Print("  │       " + formattedString)
+				} else {
+					logger.Print("          " + formattedString)
 				}
 			}
+
 		}
 		logger.Print("")
 	} else {

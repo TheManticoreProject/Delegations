@@ -39,6 +39,14 @@
   - [x] Add protocol transition on a constrained delegation
   - [x] Remove protocol transition on a constrained delegation
 
+## Installation
+
+To get this tool you can either download the latest release from the [GitHub release page](https://github.com/TheManticoreProject/Delegations/releases) or install it with the following `go` command:
+
+```bash
+go install github.com/TheManticoreProject/Delegations@latest
+```
+
 ## Demonstration
 
 <details open>

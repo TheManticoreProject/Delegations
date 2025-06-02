@@ -39,23 +39,18 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 	if !success {
 		return fmt.Errorf("error connecting to LDAP: %s", err)
 	}
-
 	if debug {
 		logger.Debug(fmt.Sprintf("[+] Connected to LDAP: %s", domainController))
 	}
 
-	logger.Info(fmt.Sprintf("[+] Saving current state of delegations for %s", creds.Domain))
+	logger.Info(fmt.Sprintf("[+] Saving current state of delegations for domain %s", creds.Domain))
 
 	// Create a map to store the current state of delegations
 	delegationMap := make(map[string]DelegationState)
 
-	query := "(&"
-	query += "(objectClass=computer)"
-	query += "(objectClass=person)"
-	query += "(objectClass=user)"
-	query += ")"
-
-	searchResults, err := ldapSession.QueryWholeSubtree("", query, []string{})
+	// We are looking for either a user, computer or person
+	query := "(|(objectClass=computer)(objectClass=person)(objectClass=user))"
+	searchResults, err := ldapSession.QueryWholeSubtree("", query, []string{"userAccountControl", "msDS-AllowedToDelegateTo", "msDS-AllowedToActOnBehalfOfOtherIdentity"})
 	if err != nil {
 		return fmt.Errorf("error performing LDAP search: %s", err)
 	}
@@ -88,7 +83,7 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 
 		// Create a new map for the current state
 		newDelegationMap := make(map[string]DelegationState)
-		searchResults, err := ldapSession.QueryWholeSubtree("", query, []string{})
+		searchResults, err := ldapSession.QueryWholeSubtree("", query, []string{"userAccountControl", "msDS-AllowedToDelegateTo", "msDS-AllowedToActOnBehalfOfOtherIdentity"})
 		if err != nil {
 			return fmt.Errorf("error performing LDAP search: %s", err)
 		}
@@ -228,15 +223,15 @@ func MonitorDelegations(domainController string, ldapPort int, creds *credential
 			if len(constrainedDelegationMessages) > 0 {
 				flag := int(ldap_attributes.UAF_TRUSTED_TO_AUTH_FOR_DELEGATION)
 				if newUAC&flag == flag {
-					messages = append(messages, fmt.Sprintf("  │ Constrained delegation (with protocol transition) to:"))
+					messages = append(messages, "  │ Constrained delegation (with protocol transition) to:")
 				} else {
-					messages = append(messages, fmt.Sprintf("  │ Constrained delegation to:"))
+					messages = append(messages, "  │ Constrained delegation to:")
 				}
 				messages = append(messages, constrainedDelegationMessages...)
 			}
 
 			if len(resourceBasedConstrainedDelegationMessages) > 0 {
-				messages = append(messages, fmt.Sprintf("  │ Resource-based constrained delegation:"))
+				messages = append(messages, "  │ Resource-based constrained delegation:")
 				messages = append(messages, resourceBasedConstrainedDelegationMessages...)
 			}
 

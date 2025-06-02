@@ -78,6 +78,38 @@ func AuditUnconstrainedDelegations(ldapHost string, ldapPort int, creds *credent
 		logger.Print("[>] Unconstrained Delegations (0)")
 	}
 
+	// Query for DCs without unconstrained delegation
+	query = "(&"
+	// Looking for domain controllers
+	query += fmt.Sprintf("(userAccountControl:1.2.840.113556.1.4.803:=%d)", ldap_attributes.UAF_SERVER_TRUST_ACCOUNT)
+	// Without unconstrained delegation flag
+	query += fmt.Sprintf("(!(userAccountControl:1.2.840.113556.1.4.803:=%d))", ldap_attributes.UAF_TRUSTED_FOR_DELEGATION)
+	// That are not RODCs
+	query += fmt.Sprintf("(!(userAccountControl:1.2.840.113556.1.4.803:=%d))", ldap_attributes.UAF_PARTIAL_SECRETS_ACCOUNT)
+	// Searching for the object with the given distinguished name
+	if len(distinguishedName) > 0 {
+		query += fmt.Sprintf("(distinguishedName=%s)", distinguishedName)
+	}
+	query += ")"
+	searchResults, err = ldapSession.QueryWholeSubtree("", query, []string{"userAccountControl"})
+	if err != nil {
+		return fmt.Errorf("error performing LDAP search: %s", err)
+	}
+
+	if len(searchResults) != 0 {
+		logger.Print(fmt.Sprintf("[>] Domain Controllers without Unconstrained Delegation (\x1b[93m%d\x1b[0m):", len(searchResults)))
+		for k, entry := range searchResults {
+			auditString := "(\x1b[91mSuspicious\x1b[0m: DCs should have unconstrained delegation)"
+
+			if k < len(searchResults)-1 {
+				logger.Print(fmt.Sprintf("  ├── \x1b[94m%s\x1b[0m %s", entry.DN, auditString))
+			} else {
+				logger.Print(fmt.Sprintf("  └── \x1b[94m%s\x1b[0m %s", entry.DN, auditString))
+			}
+		}
+		logger.Print("")
+	}
+
 	ldapSession.Close()
 
 	return nil
